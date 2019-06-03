@@ -7,7 +7,7 @@ The files which need to be updated are:
 `main.js`  
  `interactive_brokers.js`
 
-In `interactive_brokers.js`, the goal is to writte the code to create the connection to an HydraX_IB server, where we will handle users requests
+In `interactive_brokers.js`, the goal is to writte the code to create the connection to a HydraX_IB server, where we will handle users requests  
 `main.js` is the testing file to run so as to test the exchange connector object. 
 
 **The flux is the following:**
