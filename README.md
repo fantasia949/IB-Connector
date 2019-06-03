@@ -12,13 +12,13 @@ In `interactive_brokers.js`, the goal is to writte the code to create the connec
 
 **The flux is the following:**
 
-Create of a nodeJS `ib_connector` object following `lmaxlondon_connector` & `hitbtc_connector` architecture
-Create connection between nodeJS exchange object and the HydraX_IB server using WebSocket
-NodeJS IB object sends request messages to HydraX_IB server through WebSocket
-HydraX_IB server manages messages 
-HydraX_IB server sends and receives messages to/from IB server (must handle authentication process)
-HydraX_IB server sends messages back to nodeJS IB object
-NodeJS IB object parse the result following our format policy and display it in the console
+1. Create of a nodeJS `ib_connector` object following `lmaxlondon_connector` & `hitbtc_connector` architecture  
+2. Create connection between nodeJS exchange object and the HydraX_IB server using WebSocket  
+3. NodeJS IB object sends request messages to HydraX_IB server through WebSocket  
+4. HydraX_IB server manages messages   
+5. HydraX_IB server sends and receives messages to/from IB server (must handle authentication process)
+6. HydraX_IB server sends messages back to nodeJS IB object
+7. NodeJS IB object parse the result following our format policy and display it in the console
 
 **How to run?**  
 When all modification are done, save files then:  
