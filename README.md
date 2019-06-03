@@ -29,15 +29,14 @@ When all modification are done, save files then:
 
 ### Other info
 * **full_intrument**  
-*Format:* exchange_name:instrument, in lower case 
+*Format:* exchange_name:instrument, in lower case   
 Intrument can be a pair: eur/usd, or just an index, a stock, a commodity...  
 *Example:* fxcm:eur/usd, lmaxlondon:spx, bitfinex:btc/usd
 
-* **Symbol** 
-API: the sigma symnol format
-*Example:* eur/usd, lmaxlondon:spx, bitfinex:btc/usd
-
-Exchange: the exchange/broker symbol format
+**Symbol**  
+* API: the sigma symnol format  
+*Example:* eur/usd, lmaxlondon:spx, bitfinex:btc/usd  
+* Exchange: the exchange/broker symbol format  
 *Example:* EUR/USD, EUR_USD, SPX, 
 
 **NB:**  
