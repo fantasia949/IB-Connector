@@ -28,7 +28,7 @@ When all modification are done, save files then:
 
 
 ### Other info
-* **full_intrument**  
+**full_intrument**  
 *Format:* exchange_name:instrument, in lower case   
 Intrument can be a pair: eur/usd, or just an index, a stock, a commodity...  
 *Example:* fxcm:eur/usd, lmaxlondon:spx, bitfinex:btc/usd
