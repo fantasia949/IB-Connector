@@ -1,0 +1,32 @@
+{
+  "name": "ib_integration",
+  "version": "1.0.0",
+  "description": "Interactive Brokers integration to Sigma exchnage API ",
+  "main": "main.js",
+  "dependencies": {
+    "ccxt": "^1.18.613",
+    "lodash": "^4.17.11",
+    "path": "^0.12.7",
+    "webpack-cli": "^3.3.0",
+    "webpack-notifier": "^1.7.0",
+    "ws": "^6.2.1"
+  },
+  "devDependencies": {
+    "webpack": "^4.30.0",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0"
+  },
+  "scripts": {
+    "start": "webpack --config webpack.config.js && node ./dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HydraXTrader/IB_integration.git"
+  },
+  "author": "Hugo Brunet",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HydraXTrader/IB_integration/issues"
+  },
+  "homepage": "https://github.com/HydraXTrader/IB_integration#readme"
+}
