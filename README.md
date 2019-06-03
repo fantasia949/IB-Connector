@@ -1,9 +1,9 @@
 # IB integration
 Interactive brokers integration to sigma exchange API  
-This repository is made to test the connection between a nodeJS IB broker object and Interactive Borkers API.
+This repository is made to test the connection between a nodeJS IB object and Interactive Borkers API.
 We want to test if we can send and receive message to IB using a WebSocket connection. 
 
-The files which need to be updated are:
+The files which need to be updated are:  
 `main.js`  
  `interactive_brokers.js`
 
@@ -20,14 +20,14 @@ HydraX_IB server sends and receives messages to/from IB server (must handle auth
 HydraX_IB server sends messages back to nodeJS IB object
 NodeJS IB object parse the result following our format policy and display it in the console
 
-**How to run?**
-When all modification are done, save files then:
+**How to run?**  
+When all modification are done, save files then:  
 
-`npm install`
+`npm install`  
 `npm run start`
 
 
-###Other info
+### Other info
 * **full_intrument**  
 *Format:* exchange_name:instrument, in lower case 
 Intrument can be a pair: eur/usd, or just an index, a stock, a commodity...  
