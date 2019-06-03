@@ -37,7 +37,7 @@ Intrument can be a pair: eur/usd, or just an index, a stock, a commodity...
 * API: the sigma symnol format  
 *Example:* eur/usd, lmaxlondon:spx, bitfinex:btc/usd  
 * Exchange: the exchange/broker symbol format  
-*Example:* EUR/USD, EUR_USD, SPX, 
+*Example:* EUR/USD, EUR_USD, eurusd, SPX, 
 
 **NB:**  
 On LMAXLondon example, the watchlist and the orderbook are updated directly in the JAVA server so the answer we got from JAVA server is already updated and can be send to sthe client. The use on this.orderbook and this.watchlist object is not very usefull. 
