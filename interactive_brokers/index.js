@@ -301,7 +301,7 @@ class IbConnector extends EventEmitter {
 	}
 	_onceMessageEvent (eventName, cb) {
 		const socket = this._socket
-		// ws's once does not work as expected
+		// ws's once() does not work as expected
 		socket.on(EVENT.MESSAGE, message => {
 			const { event, data } = JSON.parse(message)
 			if (event === eventName) {

@@ -1,7 +1,7 @@
 import lmaxlondon_connector from './lmaxlondon'
 import hitbtc_connector from './hitbtc'
 import IbConnector from './interactive_brokers'
-import { MARKET_DATA_TYPE, INTENT, EVENT, SECURITY_TYPE, ORDER_TYPE } from './interactive_brokers/constants'
+import { MARKET_DATA_TYPE, INTENT, EVENT, SECURITY_TYPE, ORDER_TYPE, ORDERBOOK_OPERATION } from './interactive_brokers/constants'
 
 // let lmaxlondon = new lmaxlondon_connector();
 // let hitbtc = new hitbtc_connector()
@@ -18,20 +18,57 @@ import { MARKET_DATA_TYPE, INTENT, EVENT, SECURITY_TYPE, ORDER_TYPE } from './in
 	}
 	const facebookSymbol = 'fb'
 
-	const symbolConfig2 = {
-		secType: SECURITY_TYPE.FOREX
-	}
-
-	const eurToUsdSymbol = 'eur/usd'
-
 	const ib = new IbConnector(credentials)
 
 	ib.on(EVENT.ERROR, (uuid, err) => console.log(uuid, err))
 	ib.on(EVENT.CLOSE, uuid => console.log(uuid, 'disconnected'))
-	ib.on(EVENT.DATA, (uuid, data, event) => console.log(uuid, 'global', data, event))
+	// ib.on(EVENT.DATA, (uuid, data, event) => console.log(uuid, 'global', data, event))
 
-	ib.subscribe(INTENT.WATCHLIST, uuid, facebookSymbol, symbolConfig, (uuid, data, event) => console.log(uuid, facebookSymbol, data, event))
-	// ib.subscribe(INTENT.ORDERBOOK, uuid, eurToUsdSymbol, symbolConfig2, (uuid, data, event) => console.log(uuid, eurToUsdSymbol, data, event))
+	// Test watchlist
+	const watchlist = { bid: '-', ask: '-', last: '-', lastTraded: '-', volume: '-', close: '-', open: '-' }
+
+	let watchlistTimeoutId = undefined
+	ib.subscribe(INTENT.WATCHLIST, uuid, facebookSymbol, symbolConfig, (_, data) => {
+		Object.keys(watchlist).filter(field => data[field] !== undefined).forEach(field => (watchlist[field] = data[field]))
+
+		clearTimeout(watchlistTimeoutId)
+		watchlistTimeoutId = setTimeout(() => console.log(watchlist), 1000)
+	})
+
+	// Test Orderbook
+	// const orderbookEntry = { price: '-', size: '-' }
+	// const orderbook = Array.from({ length: 2 }).fill([
+	// 	{ ...orderbookEntry },
+	// 	{ ...orderbookEntry }
+	// ])
+	// let orderbookTimeoutId = undefined
+	// ib.subscribe(
+	// 	INTENT.ORDERBOOK,
+	// 	uuid,
+	// 	'eur/usd',
+	// 	{
+	// 		secType: SECURITY_TYPE.FOREX,
+	// 		numRows: 2
+	// 	},
+	// 	(_, { position, operation, side, price, size }) => {
+	// 		switch (operation) {
+	// 			case ORDERBOOK_OPERATION.INSERT:
+	// 				orderbook[position][side] = { price, size }
+	// 				break
+	// 			case ORDERBOOK_OPERATION.UPDATE:
+	// 				Object.assign(orderbook[position][side], JSON.parse(JSON.stringify({ price, size })))
+	// 				break
+	// 			case ORDERBOOK_OPERATION.DELETE:
+	// 				orderbook[position][side] = { ...orderbookEntry }
+	// 				break
+	// 		}
+
+	// 		clearTimeout(orderbookTimeoutId)
+	// 		orderbookTimeoutId = setTimeout(() => console.log(orderbook), 1000)
+	// 	}
+	// )
+
+	// Test trade - require historical data access
 	// ib.subscribe(INTENT.RECENT_TRADES, uuid, facebookSymbol, {}, (uuid, data, event) => console.log(uuid, facebookSymbol, data, event))
 	// ib.subscribe(INTENT.POSITIONS, uuid, undefined, undefined, (uuid, data, event) => console.log(uuid, data, event))
 	// ib.subscribe(INTENT.OPEN_ORDERS, uuid, undefined, undefined, (uuid, data, event) => console.log(uuid, data, event))

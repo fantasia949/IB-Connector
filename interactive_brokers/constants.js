@@ -121,8 +121,8 @@ export const TICK_PRICE_FIELD = {
 }
 
 export const TICK_STRING_FIELD = {
-	LAST_TIMESTAMP: 45,
-	DELAYED_LAST_TIMESTAMP: 88
+	LAST_TRADED_TIMESTAMP: 45,
+	DELAYED_LAST_TRADED_TIMESTAMP: 88
 }
 
 export const ORDER_TYPE = {
@@ -137,4 +137,10 @@ export const ORDER_TYPE = {
 export const ORDER_ACTION = {
 	BUY: 'BUY',
 	SELL: 'SELL'
+}
+
+export const ORDERBOOK_OPERATION = {
+	INSERT: 0,
+	UPDATE: 1,
+	DELETE: 2
 }

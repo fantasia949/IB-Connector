@@ -13,8 +13,8 @@ const tickSizeField = {
 }
 
 const tickStringField = {
-	[TICK_STRING_FIELD.LAST_TIMESTAMP]: 'timestamp',
-	[TICK_STRING_FIELD.DELAYED_LAST_TIMESTAMP]: 'timestamp'
+	[TICK_STRING_FIELD.LAST_TRADED_TIMESTAMP]: 'lastTraded',
+	[TICK_STRING_FIELD.DELAYED_LAST_TRADED_TIMESTAMP]: 'lastTraded'
 }
 
 const tickPriceField = {
