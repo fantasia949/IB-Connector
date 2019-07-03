@@ -17,7 +17,8 @@
     "babel-preset-env": "^1.7.0"
   },
   "scripts": {
-    "start": "webpack --config webpack.config.js && node ./dist/index.js"
+    "start": "npm run build && node ./dist/index.js",
+    "build": "webpack --config webpack.config.js"
   },
   "repository": {
     "type": "git",
