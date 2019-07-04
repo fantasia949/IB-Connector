@@ -1,6 +1,6 @@
 import websocket_connection_manager from '../websocket_connection_manager'
 import EventEmitter from 'events'
-import { MARKET_DATA_TYPE, SUBSCRIPTION_TYPE, EVENT, TRADE_EVENT } from './constants'
+import { MARKET_DATA_TYPE, EVENT, TRADE_EVENT } from './constants'
 import { parseMessage } from './parser'
 import {
 	makeRequestSubscriptionCommand,
@@ -78,7 +78,7 @@ class IbConnector extends EventEmitter {
 		const reqId = this._socket.getReqId()
 
 		const message = makeRequestSubscriptionCommand(intent, reqId, exSymbol, options)
-		this._sendData(message)
+		this._sendCommand(message)
 
 		if (typeof cb === 'function') {
 			this._responseHandlers[reqId] = cb
@@ -96,7 +96,7 @@ class IbConnector extends EventEmitter {
 	 */
 	offSubscription (intent, reqId) {
 		const message = makeCancelSubscriptionCommand(intent, reqId)
-		this._sendData(message)
+		this._sendCommand(message)
 
 		if (this._responseHandlers[reqId]) {
 			this._responseHandlers[reqId] = undefined
@@ -131,12 +131,12 @@ class IbConnector extends EventEmitter {
 		return new Promise(resolve => {
 			this._onceMessageEvent(TRADE_EVENT.NEXT_ORDER_ID, orderId => {
 				const message = makePlaceOrderCommand(orderId, orderType, exSymbol, quantity, orderConfig)
-				this._sendData(message)
+				this._sendCommand(message)
 
 				resolve(orderId)
 			})
 
-			this._sendData({
+			this._sendCommand({
 				command: 'reqIds',
 				args: [
 					1
@@ -152,7 +152,7 @@ class IbConnector extends EventEmitter {
 	 */
 	cancelOrder (orderId) {
 		const message = makeCancelOrderCommand(orderId, orderType)
-		this._sendData(message)
+		this._sendCommand(message)
 	}
 
 	/**
@@ -180,7 +180,7 @@ class IbConnector extends EventEmitter {
 
 			this._onceMessageEvent(EVENT.READY, () => {
 				if (marketDataType && marketDataType !== MARKET_DATA_TYPE.LIVE) {
-					this._sendData({
+					this._sendCommand({
 						command: 'reqMarketDataType',
 						args: [
 							marketDataType
@@ -290,12 +290,12 @@ class IbConnector extends EventEmitter {
 		return socket
 	}
 
-	_sendData (message) {
+	_sendCommand (message) {
 		if (!message.command) {
 			throw new Error('Command is not valid: ' + message.command)
 		}
 
-		console.log(JSON.stringify(message))
+		this.emit(EVENT.COMMAND_SEND, message)
 
 		this._socket.send(JSON.stringify(message))
 	}

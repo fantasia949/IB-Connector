@@ -30,7 +30,8 @@ export const EVENT = {
 	ERROR: 'error',
 	MESSAGE: 'message',
 	DATA: 'data',
-	READY: 'ready'
+	READY: 'ready',
+	COMMAND_SEND: 'command'
 }
 
 export const INTENT = {

@@ -22,6 +22,7 @@ import { MARKET_DATA_TYPE, INTENT, EVENT, SECURITY_TYPE, ORDER_TYPE, ORDERBOOK_O
 
 	ib.on(EVENT.ERROR, (uuid, err) => console.log(uuid, err))
 	ib.on(EVENT.CLOSE, uuid => console.log(uuid, 'disconnected'))
+	ib.on(EVENT.COMMAND_SEND, message => console.log(JSON.stringify(message)))
 	// ib.on(EVENT.DATA, (uuid, data, event) => console.log(uuid, 'global', data, event))
 
 	// Test watchlist
@@ -32,7 +33,7 @@ import { MARKET_DATA_TYPE, INTENT, EVENT, SECURITY_TYPE, ORDER_TYPE, ORDERBOOK_O
 		Object.keys(watchlist).filter(field => data[field] !== undefined).forEach(field => (watchlist[field] = data[field]))
 
 		clearTimeout(watchlistTimeoutId)
-		watchlistTimeoutId = setTimeout(() => console.log(watchlist), 1000)
+		watchlistTimeoutId = setTimeout(() => console.log(watchlist), 300)
 	})
 
 	// Test Orderbook
@@ -64,7 +65,7 @@ import { MARKET_DATA_TYPE, INTENT, EVENT, SECURITY_TYPE, ORDER_TYPE, ORDERBOOK_O
 	// 		}
 
 	// 		clearTimeout(orderbookTimeoutId)
-	// 		orderbookTimeoutId = setTimeout(() => console.log(orderbook), 1000)
+	// 		orderbookTimeoutId = setTimeout(() => console.log(orderbook), 300)
 	// 	}
 	// )
 
@@ -78,7 +79,7 @@ import { MARKET_DATA_TYPE, INTENT, EVENT, SECURITY_TYPE, ORDER_TYPE, ORDERBOOK_O
 	// const orderId = await ib.placeOrder(facebookSymbol, ORDER_TYPE.LIMIT, 1000, { price: 13 })
 	// ib.cancelOrder(orderId)
 
-	setTimeout(() => ib.unsubscribe(), 20 * 1000)
+	setTimeout(() => ib.unsubscribe(), 40 * 1000)
 })()
 
 //lmaxlondon.subscribe('watchlist', 'socket_id', 'lmaxlondon:eur/usd');
