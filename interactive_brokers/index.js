@@ -1,3 +1,4 @@
+import assert from 'assert'
 import websocket_connection_manager from '../websocket_connection_manager'
 import EventEmitter from 'events'
 import { MARKET_DATA_TYPE, EVENT, TRADE_EVENT } from './constants'
@@ -37,25 +38,27 @@ class IbConnector extends EventEmitter {
 
 		const { username, password, endpoint } = config
 
-		if (!username || !password || !endpoint) {
-			throw new Error('config is invalid. { username, password, endpoint } are required')
-		}
+		assert(username && password && endpoint, 'config is invalid. { username, password, endpoint } are required')
 
 		this._config = config
 
+		this._marketDataType = undefined
+
 		this._responseHandlers = {}
+	}
+
+	setMarketDataType (marketDataType) {
+		assert(Object.values(MARKET_DATA_TYPE).includes(marketDataType), 'marketDataType is invalid')
+		this._marketDataType = marketDataType
 	}
 
 	/**
 	* 
 	* @typedef SubscriptionConfig
 		@property {string} secType - security type (stock, forex,...)
-	* @property {boolean=false} snapshot -  A true value will return a one-time snapshot, while a false value will provide streaming data.
-	* @property {boolean=false} regulatory - snapshot for US stocks requests NBBO snapshots for users which have "US Securities Snapshot Bundle" subscription but not corresponding Network A, B, or C subscription necessary for streaming * market data.
-	* @property {string=''} genericTickList - comma separated ids of the available generic ticks
 	  @property {number=1} numRows - the number of rows on each side of the order book
 	*/
-
+	
 	/**
 	 *
 	 * @callback subscriptionCallback
@@ -68,16 +71,15 @@ class IbConnector extends EventEmitter {
 	 * Start listening an instrument
 	 *
 	 * @param {string} intent
-	 * @param {string} exSymbol
-	 * @param {SubscriptionConfig} [options={}]
+	 * @param {SubscriptionConfig} [config={}]
 	 * @param {subscriptionCallback=} cb
 	 * @returns {number} request ID
 	 * @memberof IbConnector
 	 */
-	onSubscription (intent, exSymbol, options, cb) {
+	onSubscription (intent, config, cb) {
 		const reqId = this._socket.getReqId()
 
-		const message = makeRequestSubscriptionCommand(intent, reqId, exSymbol, options)
+		const message = makeRequestSubscriptionCommand(intent, reqId, config)
 		this._sendCommand(message)
 
 		if (typeof cb === 'function') {
@@ -158,7 +160,6 @@ class IbConnector extends EventEmitter {
 	/**
  * @typedef ConnectConfig
  * @property {string} uuid
- * @property {number} marketDataType
  */
 
 	/**
@@ -170,7 +171,7 @@ class IbConnector extends EventEmitter {
 	 */
 	connect (config) {
 		return new Promise((resolve, reject) => {
-			const { uuid, marketDataType } = config
+			const { uuid } = config
 			if (!uuid) {
 				reject('config is invalid. { uuid } are required')
 			}
@@ -179,11 +180,11 @@ class IbConnector extends EventEmitter {
 			this._socket = socket
 
 			this._onceMessageEvent(EVENT.READY, () => {
-				if (marketDataType && marketDataType !== MARKET_DATA_TYPE.LIVE) {
+				if (this._marketDataType !== undefined) {
 					this._sendCommand({
 						command: 'reqMarketDataType',
 						args: [
-							marketDataType
+							this._marketDataType
 						]
 					})
 				}
@@ -291,9 +292,7 @@ class IbConnector extends EventEmitter {
 	}
 
 	_sendCommand (message) {
-		if (!message.command) {
-			throw new Error('Command is not valid: ' + message.command)
-		}
+		assert(message.command, 'Command is not valid: ' + message.command)
 
 		this.emit(EVENT.COMMAND_SEND, message)
 
@@ -320,14 +319,11 @@ export default class SimpleIbConnector extends IbConnector {
 		config.endpoint = 'ws://127.0.0.1:3000'
 		super(config)
 	}
-
-	async subscribe (intent, uuid, exSymbol, config = {}, cb) {
-		const { marketDataType } = config
-		await super.connect({ uuid, marketDataType })
-		super.onSubscription(intent, exSymbol, config, cb)
+	async subscribe (intent, config, cb) {
+		return super.onSubscription(intent, config, cb)
 	}
 
-	unsubscribe () {
-		return super.disconnect()
+	unsubscribe(intent, reqId) {
+		return super.offSubscription(intent, reqId)
 	}
 }

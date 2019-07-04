@@ -1,53 +1,35 @@
-import { INTENT, GENERIC_TICK, SUBSCRIPTION_TYPE, SECURITY_TYPE, ORDER_TYPE, ORDER_ACTION } from './constants'
+import { INTENT, SUBSCRIPTION_TYPE, SECURITY_TYPE, ORDER_ACTION } from './constants'
 import { makeContract, makeOrder } from './utils'
+import assert from 'assert'
 
-export const makeRequestSubscriptionCommand = (intent, reqId, exSymbol, options = {}) => {
+export const makeRequestSubscriptionCommand = (intent, reqId, config = intentConfig) => {
 	let args = undefined
 	const subscriptionType = SUBSCRIPTION_TYPE[intent]
 
-	if (!subscriptionType) {
-		throw new Error('This intent is not supported: ' + intent)
-	}
+	assert(subscriptionType, 'This intent is not supported: ' + intent)
 
 	const command = 'req' + subscriptionType
 
-	const {
-		secType = SECURITY_TYPE.STOCK,
-		snapshot = false,
-		regulatory = false,
-		genericTickList = GENERIC_TICK.DEFAULT,
-		numRows = 1
-	} = options
-
 	switch (intent) {
 		case INTENT.RECENT_TRADES:
-			args = [
-				reqId,
-				makeContract(secType, exSymbol),
-				'',
-				'1 D',
-				'1 min',
-				'TRADES',
-				1,
-				1,
-				true
-			]
+			assert(config, 'Recent trades config must be defined')
+			args = config.toCommandParams(reqId)
 			break
 		case INTENT.ORDERBOOK:
-			args = [
-				reqId,
-				makeContract(secType, exSymbol),
-				numRows
-			]
+			assert(config, 'Orderbook config must be defined')
+			args = config.toCommandParams(reqId)
 			break
 		case INTENT.WATCHLIST:
-			args = [
-				reqId,
-				makeContract(secType, exSymbol),
-				genericTickList,
-				snapshot,
-				regulatory
-			]
+			assert(config, 'Watchlist config must be defined')
+			args = config.toCommandParams(reqId)
+			break
+		case INTENT.ACCOUNT_SUMMARY:
+			assert(config, 'Account summary config must be defined')
+			args = config.toCommandParams(reqId)
+			break
+		case INTENT.INSTRUMENT_DETAIL:
+			assert(config, 'Instrument detail config must be defined')
+			args = config.toCommandParams(reqId)
 			break
 	}
 
@@ -57,9 +39,7 @@ export const makeRequestSubscriptionCommand = (intent, reqId, exSymbol, options 
 export const makeCancelSubscriptionCommand = (intent, reqId) => {
 	const subscriptionType = SUBSCRIPTION_TYPE[intent]
 
-	if (!subscriptionType) {
-		throw new Error('This intent is not supported: ' + intent)
-	}
+	assert(subscriptionType, 'This intent is not supported: ' + intent)
 
 	const command = 'cancel' + subscriptionType
 	const args = [
@@ -75,7 +55,7 @@ export const makePlaceOrderCommand = (orderId, orderType, exSymbol, quantity, co
 	const { secType = SECURITY_TYPE.STOCK } = config
 	const args = [
 		orderId,
-		makeContract(secType, exSymbol),
+		makeContract({ secType, exSymbol }),
 		makeOrder(orderType, ORDER_ACTION.BUY, quantity, config)
 	]
 

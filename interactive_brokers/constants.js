@@ -13,7 +13,9 @@ export const MARKETDATA_EVENT = {
 	ORDERBOOK: 'updateMktDepth',
 	HISTORICAL_DATA: 'historicalData',
 	HISTORICAL_DATA_UPDATE: 'historicalDataUpdate',
-	HISTORICAL_DATA_END: 'historicalDataEnd'
+	HISTORICAL_DATA_END: 'historicalDataEnd',
+	INSTRUMENT_DETAIL: 'contractDetails',
+	INSTRUMENT_DETAIL_END: 'contractDetailsEnd'
 }
 export const TRADE_EVENT = {
 	ORDER_OPEN: 'openOrder',
@@ -22,6 +24,11 @@ export const TRADE_EVENT = {
 	POSITION: 'position',
 	POSITION_END: 'positionEnd',
 	NEXT_ORDER_ID: 'nextValidId'
+}
+
+export const ACCOUNT_EVENT = {
+	ACCOUNT_SUMMARY: 'accountSummary',
+	ACCOUNT_SUMMARY_END: 'accountSummaryEnd'
 }
 
 export const EVENT = {
@@ -39,7 +46,9 @@ export const INTENT = {
 	ORDERBOOK: 'orderbook',
 	WATCHLIST: 'watchlist',
 	OPEN_ORDERS: 'subscribe_open_orders',
-	POSITIONS: 'subscribe_closed_positions'
+	POSITIONS: 'subscribe_closed_positions',
+	ACCOUNT_SUMMARY: 'account_summary',
+	INSTRUMENT_DETAIL: 'contract_detail'
 }
 
 export const SUBSCRIPTION_TYPE = {
@@ -47,7 +56,9 @@ export const SUBSCRIPTION_TYPE = {
 	[INTENT.ORDERBOOK]: 'MktDepth',
 	[INTENT.OPEN_ORDERS]: 'OpenOrders',
 	[INTENT.RECENT_TRADES]: 'HistoricalData',
-	[INTENT.POSITIONS]: 'Positions'
+	[INTENT.POSITIONS]: 'Positions',
+	[INTENT.ACCOUNT_SUMMARY]: 'AccountSummary',
+	[INTENT.INSTRUMENT_DETAIL]: 'ContractDetails'
 }
 
 export const SECURITY_TYPE = {
@@ -144,4 +155,37 @@ export const ORDERBOOK_OPERATION = {
 	INSERT: 0,
 	UPDATE: 1,
 	DELETE: 2
+}
+
+// ref: https://interactivebrokers.github.io/tws-api/classIBApi_1_1EClient.html#a3e0d55d36cd416639b97ee6e47a86fe9
+export const ACCOUNT_TAG = {
+	AccountType: 'AccountType',
+	NetLiquidation: 'NetLiquidation',
+	TotalCashValue: 'TotalCashValue',
+	SettledCash: 'SettledCash',
+	AccruedCash: 'AccruedCash',
+	BuyingPower: 'BuyingPower',
+	EquityWithLoanValue: 'EquityWithLoanValue'
+	// PreviousEquityWithLoanValue: '',
+	// GrossPositionValue: '',
+	// RegTEquity: '',
+	// RegTMargin: '',
+	// SMA: '',
+	// InitMarginReq: '',
+	// MaintMarginReq: '',
+	// AvailableFunds: '',
+	// ExcessLiquidity: '',
+	// Cushion: '',
+	// FullInitMarginReq: '',
+	// FullMaintMarginReq: '',
+	// FullAvailableFunds: '',
+	// FullExcessLiquidity: '',
+	// LookAheadNextChange: '',
+	// LookAheadInitMarginReq: '',
+	// LookAheadMaintMarginReq: '',
+	// LookAheadAvailableFunds: '',
+	// LookAheadExcessLiquidity: '',
+	// HighestSeverity: '',
+	// DayTradesRemaining: '',
+	// Leverage: ''
 }

@@ -1,5 +1,6 @@
-import { TICK_PRICE_FIELD, TICK_SIZE_FIELD, TICK_STRING_FIELD, MARKETDATA_EVENT, TRADE_EVENT } from './constants'
-import { dumpFunc } from './utils'
+import { TICK_PRICE_FIELD, TICK_SIZE_FIELD, TICK_STRING_FIELD, MARKETDATA_EVENT, TRADE_EVENT, ACCOUNT_EVENT } from './constants'
+import { reqIdMappingFunc } from './utils'
+import assert from 'assert'
 
 const tickSizeField = {
 	[TICK_SIZE_FIELD.ASK]: 'askSize',
@@ -144,7 +145,7 @@ const dataMapperFunc = {
 		orderState
 	}),
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ab86caf7ed61e14d9b5609e8dd60b93e1
-	[TRADE_EVENT.ORDER_OPEN_END]: dumpFunc,
+	[TRADE_EVENT.ORDER_OPEN_END]: reqIdMappingFunc,
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a17f2a02d6449710b6394d0266a353313
 	[TRADE_EVENT.ORDER_STATUS]: (
 		[
@@ -190,13 +191,51 @@ const dataMapperFunc = {
 		avgCost
 	}),
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#acf1bebfc1b29cbeff32da7d53aec0971
-	[TRADE_EVENT.POSITION_END]: dumpFunc
+	[TRADE_EVENT.POSITION_END]: reqIdMappingFunc,
+	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#acd761f48771f61dd0fb9e9a7d88d4f04
+	[ACCOUNT_EVENT.ACCOUNT_SUMMARY]: (
+		[
+			reqId,
+			account,
+			tag,
+			value,
+			currency
+		]
+	) => ({
+		reqId,
+		account,
+		tag,
+		value,
+		currency
+	}),
+
+	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a12bf8483858526077140c950e80f2995
+	[ACCOUNT_EVENT.ACCOUNT_SUMMARY_END]: reqIdMappingFunc,
+	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a1b767810613c700b5bb1056a836da0bc
+	[MARKETDATA_EVENT.INSTRUMENT_DETAIL]: (
+		[
+			reqId,
+			{ marketName, minTick, orderTypes, validExchanges, longName, industry, category, subcategory, tradingHours, issueDate }
+		]
+	) => ({
+		reqId,
+		marketName,
+		minTick,
+		orderTypes,
+		validExchanges,
+		longName,
+		industry,
+		category,
+		subcategory,
+		tradingHours,
+		issueDate
+	}),
+	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a4e9466339bac7149c2fdb48cda0dd088
+	[MARKETDATA_EVENT.INSTRUMENT_DETAIL_END]: reqIdMappingFunc
 }
 
 export const parseMessage = message => {
-	if (!message) {
-		throw new Error('Message is undefined')
-	}
+	assert(message, 'Message is undefined')
 
 	const { event, data } = JSON.parse(message)
 

@@ -1,4 +1,5 @@
 import { SECURITY_TYPE, ORDER_TYPE } from './constants'
+import assert from 'assert'
 
 export const makeOrder = (orderType, action, quantity, config = {}) => {
 	const { price, transmitOrder, goodAfterTime, goodTillDate, parentId, tif, limitPrice, stopPrice, auxPrice } = config
@@ -65,7 +66,7 @@ export const makeOrder = (orderType, action, quantity, config = {}) => {
 	}
 }
 
-export const makeContract = (secType, exSymbol, currency) => {
+export const makeContract = ({ secType = SECURITY_TYPE.STOCK, exSymbol, currency }) => {
 	let args = []
 
 	switch (secType) {
@@ -97,9 +98,7 @@ export const makeContract = (secType, exSymbol, currency) => {
 			// symbol, currency
 			const symbolCurrency = exSymbol.split('/')
 
-			if (symbolCurrency.length !== 2) {
-				throw new Error('forex instrument must have this format: symbol/currency')
-			}
+			assert.equal(symbolCurrency.length, 2, 'forex instrument must have this format: symbol/currency')
 
 			args = [
 				...symbolCurrency
@@ -131,4 +130,8 @@ export const makeContract = (secType, exSymbol, currency) => {
 	}
 }
 
-export const dumpFunc = data => data
+export const reqIdMappingFunc = (
+	[
+		reqId
+	]
+) => ({ reqId })
