@@ -13,8 +13,8 @@ export const makeOrder = (orderType, action, quantity, config = {}) => {
 		case ORDER_TYPE.LIMIT:
 			args = [
 				...args,
-				transmitOrder,
-				price
+				price,
+				transmitOrder
 			]
 			break
 		case ORDER_TYPE.MARKET:

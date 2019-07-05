@@ -1,7 +1,7 @@
 import assert from 'assert'
 import websocket_connection_manager from '../websocket_connection_manager'
 import EventEmitter from 'events'
-import { MARKET_DATA_TYPE, EVENT, TRADE_EVENT } from './constants'
+import { MARKET_DATA_TYPE, EVENT, TRADE_EVENT, INTENT } from './constants'
 import { parseMessage } from './parser'
 import {
 	makeRequestSubscriptionCommand,
@@ -9,6 +9,7 @@ import {
 	makePlaceOrderCommand,
 	makeCancelOrderCommand
 } from './commandFactory'
+import { PortfolioConfig } from './intentConfigs'
 
 const { subscribe, unsubscribe } = new websocket_connection_manager()
 
@@ -58,7 +59,7 @@ class IbConnector extends EventEmitter {
 		@property {string} secType - security type (stock, forex,...)
 	  @property {number=1} numRows - the number of rows on each side of the order book
 	*/
-	
+
 	/**
 	 *
 	 * @callback subscriptionCallback
@@ -77,6 +78,13 @@ class IbConnector extends EventEmitter {
 	 * @memberof IbConnector
 	 */
 	onSubscription (intent, config, cb) {
+		if (intent === INTENT.PORTFOLIO) {
+			const message = makeRequestSubscriptionCommand(intent, true, new PortfolioConfig(this.account))
+			this._sendCommand(message)
+			this._responseHandlers[intent] = cb
+			return
+		}
+
 		const reqId = this._socket.getReqId()
 
 		const message = makeRequestSubscriptionCommand(intent, reqId, config)
@@ -97,6 +105,17 @@ class IbConnector extends EventEmitter {
 	 * @memberof IbConnector
 	 */
 	offSubscription (intent, reqId) {
+		if (intent === INTENT.PORTFOLIO) {
+			const message = makeRequestSubscriptionCommand(intent, false, new PortfolioConfig(this.account))
+			this._sendCommand(message)
+
+			if (this._responseHandlers[intent]) {
+				this._responseHandlers[intent] = undefined
+			}
+
+			return
+		}
+
 		const message = makeCancelSubscriptionCommand(intent, reqId)
 		this._sendCommand(message)
 
@@ -131,7 +150,10 @@ class IbConnector extends EventEmitter {
 	 */
 	placeOrder (exSymbol, orderType, quantity, orderConfig) {
 		return new Promise(resolve => {
-			this._onceMessageEvent(TRADE_EVENT.NEXT_ORDER_ID, orderId => {
+			this._onceMessageEvent(TRADE_EVENT.NEXT_ORDER_ID, data => {
+				const [
+					orderId
+				] = data
 				const message = makePlaceOrderCommand(orderId, orderType, exSymbol, quantity, orderConfig)
 				this._sendCommand(message)
 
@@ -153,7 +175,7 @@ class IbConnector extends EventEmitter {
 	 * @param {string} exSymbol - exchange:symbol , or symbol/currency, or symbol
 	 */
 	cancelOrder (orderId) {
-		const message = makeCancelOrderCommand(orderId, orderType)
+		const message = makeCancelOrderCommand(orderId)
 		this._sendCommand(message)
 	}
 
@@ -179,7 +201,9 @@ class IbConnector extends EventEmitter {
 
 			this._socket = socket
 
-			this._onceMessageEvent(EVENT.READY, () => {
+			this._onceMessageEvent(EVENT.READY, data => {
+				this.account = data[0]
+
 				if (this._marketDataType !== undefined) {
 					this._sendCommand({
 						command: 'reqMarketDataType',
@@ -201,6 +225,7 @@ class IbConnector extends EventEmitter {
 				EVENT.CLOSE,
 				EVENT.ERROR
 			]
+
 			forwardedEvents.forEach(event => socket.on(event, (...args) => this.emit(uuid, event, ...args)))
 		})
 	}
@@ -243,13 +268,13 @@ class IbConnector extends EventEmitter {
 			return
 		}
 
-		const { reqId, ...result } = data
+		const { reqId, intent, ...result } = data
 
-		if (!reqId) {
+		if (!reqId && !intent) {
 			return
 		}
 
-		const handler = this._responseHandlers[reqId]
+		const handler = this._responseHandlers[reqId || intent]
 
 		if (typeof handler !== 'function') {
 			return
@@ -301,13 +326,16 @@ class IbConnector extends EventEmitter {
 	_onceMessageEvent (eventName, cb) {
 		const socket = this._socket
 		// ws's once() does not work as expected
-		socket.on(EVENT.MESSAGE, message => {
+
+		const onMessage = message => {
 			const { event, data } = JSON.parse(message)
 			if (event === eventName) {
-				socket.off(eventName, cb)
+				socket.off(EVENT.MESSAGE, onMessage)
 				cb(data)
 			}
-		})
+		}
+
+		socket.on(EVENT.MESSAGE, onMessage)
 	}
 	_getStream () {
 		return this._config.endpoint
@@ -323,7 +351,7 @@ export default class SimpleIbConnector extends IbConnector {
 		return super.onSubscription(intent, config, cb)
 	}
 
-	unsubscribe(intent, reqId) {
+	unsubscribe (intent, reqId) {
 		return super.offSubscription(intent, reqId)
 	}
 }

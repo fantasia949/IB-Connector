@@ -1,9 +1,11 @@
 import assert from 'assert'
-import { GENERIC_TICK, SECURITY_TYPE, ACCOUNT_TAG } from './constants'
-import { makeContract, makeOrder } from './utils'
+import { GENERIC_TICK, SECURITY_TYPE, ACCOUNT_TAG, DATA_TO_SHOW } from './constants'
+import { makeContract } from './utils'
 
-export const intentConfig = {
-	toCommandParams: () => []
+export const defaultIntentConfig = {
+	toCommandParams: (...args) => [
+		...args
+	]
 }
 
 export class WatchlistConfig {
@@ -68,25 +70,36 @@ export class OrderbookConfig {
 	}
 }
 
-export class RecentTradesConfig {
+export class HistoricalDataConfig {
 	/**
-   *Creates an instance of RecentTradesConfig.
-   * @param {string} exSymbol
-   * @param {string} [secType=SECURITY_TYPE.STOCK]
-   * @memberof RecentTradesConfig
-   */
-	constructor (exSymbol, secType = SECURITY_TYPE.STOCK) {
+	 *Creates an instance of HistoricalDataConfig.
+	 * @param {string} exSymbol
+	 * @param {string} [secType=SECURITY_TYPE.STOCK]
+	 * @param {string} [endDateTime='']
+	 * @param {string} [durationString='1D']
+	 * @param {string} [barSizeSetting='1 min']
+	 * @param {string} [whatToShow='TRADES']
+	 * @memberof HistoricalDataConfig
+	 */
+	constructor (
+		exSymbol,
+		secType = SECURITY_TYPE.STOCK,
+		endDateTime = '',
+		durationString = '1 M',
+		barSizeSetting = '1 hour',
+		whatToShow = DATA_TO_SHOW.MIDPOINT
+	) {
 		assert(exSymbol, 'exSymbol must be defined')
 
 		this.exSymbol = exSymbol
 		this.secType = secType
-		this.endDateTime = ''
-		this.durationString = '1 D'
-		this.barSizeSetting = '1 min'
-		this.whatToShow = 'TRADES'
+		this.endDateTime = endDateTime
+		this.durationString = durationString
+		this.barSizeSetting = barSizeSetting
+		this.whatToShow = whatToShow
 		this.useRTH = 1
-		this.formatDate = 1
-		this.keepUpToDate = true
+		this.formatDate = 2
+		this.keepUpToDate = false
 	}
 
 	toCommandParams (reqId) {
@@ -100,6 +113,35 @@ export class RecentTradesConfig {
 			this.useRTH,
 			this.formatDate,
 			this.keepUpToDate
+		]
+	}
+}
+
+export class RecentTradesConfig {
+	/**
+   *Creates an instance of RecentTradesConfig.
+   * @param {string} exSymbol
+   * @param {string} [secType=SECURITY_TYPE.STOCK]
+	 * @param {string} [whatToShow=DATA_TO_SHOW.MIDPOINT]
+   * @memberof RecentTradesConfig
+   */
+	constructor (exSymbol, secType = SECURITY_TYPE.STOCK, whatToShow = DATA_TO_SHOW.MIDPOINT) {
+		assert(exSymbol, 'exSymbol must be defined')
+
+		this.exSymbol = exSymbol
+		this.secType = secType
+		this.barSize = 5
+		this.whatToShow = whatToShow
+		this.useRTH = true
+	}
+
+	toCommandParams (reqId) {
+		return [
+			reqId,
+			makeContract(this),
+			this.barSize,
+			this.whatToShow,
+			this.useRTH
 		]
 	}
 }
@@ -143,6 +185,24 @@ export class AccountSummaryConfig {
 			reqId,
 			this.group,
 			this.tags
+		]
+	}
+}
+
+export class PortfolioConfig {
+	/**
+	 *Creates an instance of PortfolioConfig.
+	 * @param {string} account
+	 * @memberof PortfolioConfig
+	 */
+	constructor (account) {
+		this.account = account
+	}
+
+	toCommandParams (subscribe) {
+		return [
+			subscribe,
+			this.account
 		]
 	}
 }

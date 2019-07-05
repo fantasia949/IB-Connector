@@ -1,4 +1,12 @@
-import { TICK_PRICE_FIELD, TICK_SIZE_FIELD, TICK_STRING_FIELD, MARKETDATA_EVENT, TRADE_EVENT, ACCOUNT_EVENT } from './constants'
+import {
+	TICK_PRICE_FIELD,
+	TICK_SIZE_FIELD,
+	TICK_STRING_FIELD,
+	MARKETDATA_EVENT,
+	TRADE_EVENT,
+	ACCOUNT_EVENT,
+	INTENT
+} from './constants'
 import { reqIdMappingFunc } from './utils'
 import assert from 'assert'
 
@@ -40,6 +48,7 @@ const dataMapperFunc = {
 			size
 		]
 	) => ({ reqId, [tickSizeField[field]]: size, _origField: field }),
+
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ae851ec3a1e0fa2d0964c7779b0c89718
 	[MARKETDATA_EVENT.TICK_PRICE]: (
 		[
@@ -48,12 +57,8 @@ const dataMapperFunc = {
 			price,
 			attribs
 		]
-	) => ({
-		reqId,
-		[tickPriceField[field]]: price,
-		_origField: field,
-		attribs
-	}),
+	) => ({ reqId, [tickPriceField[field]]: price, _origField: field, attribs }),
+
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a19cb7c5bbd4ab05ccc5f9e686ed07a9e
 	[MARKETDATA_EVENT.TICK_STRING]: (
 		[
@@ -61,11 +66,8 @@ const dataMapperFunc = {
 			field,
 			value
 		]
-	) => ({
-		reqId,
-		[tickStringField[field]]: +value,
-		_origField: field
-	}),
+	) => ({ reqId, [tickStringField[field]]: +value, _origField: field }),
+
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ab0d68c4cf7093f105095d72dd7e7a912
 	[MARKETDATA_EVENT.ORDERBOOK]: (
 		[
@@ -76,48 +78,40 @@ const dataMapperFunc = {
 			price,
 			size
 		]
-	) => ({
-		reqId,
-		position,
-		operation,
-		side,
-		price,
-		size
-	}),
+	) => ({ reqId, position, operation, side, price, size }),
+
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ac943e5b81f6de111ddf71a1f05ab6282
 	[MARKETDATA_EVENT.HISTORICAL_DATA]: (
 		[
 			reqId,
-			{ time, open, high, low, close, volume, count, wap }
+			date,
+			open,
+			high,
+			low,
+			close,
+			volume,
+			barCount,
+			WAP,
+			hasGaps
 		]
-	) => ({
-		reqId,
-		time,
-		open,
-		high,
-		low,
-		close,
-		volume,
-		count,
-		wap
-	}),
+	) => ({ reqId, date, open, high, low, close, volume, barCount, WAP, hasGaps }),
+
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a8c168da3a812b667421bec4e6e2a5b2d
 	[MARKETDATA_EVENT.HISTORICAL_DATA_UPDATE]: (
 		[
 			reqId,
-			{ time, open, high, low, close, volume, count, wap }
+			date,
+			open,
+			high,
+			low,
+			close,
+			volume,
+			barCount,
+			WAP,
+			hasGaps
 		]
-	) => ({
-		reqId,
-		time,
-		open,
-		high,
-		low,
-		close,
-		volume,
-		count,
-		wap
-	}),
+	) => ({ reqId, date, open, high, low, close, volume, barCount, WAP, hasGaps }),
+
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a715bb6750de66a0e072a910e697e20cf
 	[MARKETDATA_EVENT.HISTORICAL_DATA_END]: (
 		[
@@ -125,11 +119,8 @@ const dataMapperFunc = {
 			start,
 			end
 		]
-	) => ({
-		reqId,
-		start,
-		end
-	}),
+	) => ({ reqId, start, end }),
+
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#aa05258f1d005accd3efc0d60bc151407
 	[TRADE_EVENT.ORDER_OPEN]: (
 		[
@@ -138,14 +129,10 @@ const dataMapperFunc = {
 			order,
 			orderState
 		]
-	) => ({
-		orderId,
-		contract,
-		order,
-		orderState
-	}),
+	) => ({ orderId, contract, order, orderState }),
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ab86caf7ed61e14d9b5609e8dd60b93e1
 	[TRADE_EVENT.ORDER_OPEN_END]: reqIdMappingFunc,
+
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a17f2a02d6449710b6394d0266a353313
 	[TRADE_EVENT.ORDER_STATUS]: (
 		[
@@ -161,19 +148,8 @@ const dataMapperFunc = {
 			whyHeld,
 			mktCapPrice
 		]
-	) => ({
-		orderId,
-		status,
-		filled,
-		remaining,
-		avgFillPrice,
-		permId,
-		parentId,
-		lastFillPrice,
-		clientId,
-		whyHeld,
-		mktCapPrice
-	}),
+	) => ({ orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice }),
+
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#af4105e2dae9efd6f6bb56f706374c9d6
 	[TRADE_EVENT.POSITION]: (
 		[
@@ -182,16 +158,10 @@ const dataMapperFunc = {
 			pos,
 			avgCost
 		]
-	) => ({
-		account,
-		symbol,
-		exchange,
-		currency,
-		pos,
-		avgCost
-	}),
+	) => ({ account, symbol, exchange, currency, pos, avgCost }),
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#acf1bebfc1b29cbeff32da7d53aec0971
 	[TRADE_EVENT.POSITION_END]: reqIdMappingFunc,
+
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#acd761f48771f61dd0fb9e9a7d88d4f04
 	[ACCOUNT_EVENT.ACCOUNT_SUMMARY]: (
 		[
@@ -201,16 +171,11 @@ const dataMapperFunc = {
 			value,
 			currency
 		]
-	) => ({
-		reqId,
-		account,
-		tag,
-		value,
-		currency
-	}),
+	) => ({ reqId, account, tag, value, currency }),
 
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a12bf8483858526077140c950e80f2995
 	[ACCOUNT_EVENT.ACCOUNT_SUMMARY_END]: reqIdMappingFunc,
+
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a1b767810613c700b5bb1056a836da0bc
 	[MARKETDATA_EVENT.INSTRUMENT_DETAIL]: (
 		[
@@ -231,7 +196,72 @@ const dataMapperFunc = {
 		issueDate
 	}),
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a4e9466339bac7149c2fdb48cda0dd088
-	[MARKETDATA_EVENT.INSTRUMENT_DETAIL_END]: reqIdMappingFunc
+	[MARKETDATA_EVENT.INSTRUMENT_DETAIL_END]: reqIdMappingFunc,
+
+	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ae39d414ee5868751ffdd318c4673b63f
+	[MARKETDATA_EVENT.RECENT_TRADES]: (
+		[
+			reqId,
+			date,
+			open,
+			high,
+			low,
+			close,
+			volume,
+			WAP,
+			count
+		]
+	) => ({ reqId, date, open, high, low, close, volume, WAP, count }),
+
+	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a790ccbe25033df73996f36a79ce2ce5a
+	[ACCOUNT_EVENT.UPDATE_PORTFOLIO]: (
+		[
+			{ conId, symbol, exchange },
+			position,
+			marketPrice,
+			marketValue,
+			averageCost,
+			unrealizedPNL,
+			realizedPNL,
+			accountName
+		]
+	) => ({
+		intent: INTENT.PORTFOLIO, // useful for cb
+		conId,
+		symbol,
+		exchange,
+		position,
+		marketPrice,
+		marketValue,
+		averageCost,
+		unrealizedPNL,
+		realizedPNL,
+		accountName
+	}),
+
+	// https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a0f2fa798304a0cf101d57453f48c55f0
+	[ACCOUNT_EVENT.UPDATE_ACCOUNT_TIMESTAMP]: (
+		[
+			timestamp
+		]
+	) => ({ intent: INTENT.PORTFOLIO, timestamp }),
+
+	// https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ae15a34084d9f26f279abd0bdeab1b9b5
+	[ACCOUNT_EVENT.UPDATE_ACCOUNT_VALUE]: (
+		[
+			key,
+			value,
+			currency,
+			accountName
+		]
+	) => ({ intent: INTENT.PORTFOLIO, key, value, currency, accountName }),
+
+	// https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a05f35c1d896eeee696487d483110354f
+	[ACCOUNT_EVENT.ACCOUNT_DOWNLOAD_END]: (
+		[
+			account
+		]
+	) => ({ account, intent: INTENT.PORTFOLIO })
 }
 
 export const parseMessage = message => {

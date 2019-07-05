@@ -15,7 +15,8 @@ export const MARKETDATA_EVENT = {
 	HISTORICAL_DATA_UPDATE: 'historicalDataUpdate',
 	HISTORICAL_DATA_END: 'historicalDataEnd',
 	INSTRUMENT_DETAIL: 'contractDetails',
-	INSTRUMENT_DETAIL_END: 'contractDetailsEnd'
+	INSTRUMENT_DETAIL_END: 'contractDetailsEnd',
+	RECENT_TRADES: 'realtimeBar'
 }
 export const TRADE_EVENT = {
 	ORDER_OPEN: 'openOrder',
@@ -28,7 +29,11 @@ export const TRADE_EVENT = {
 
 export const ACCOUNT_EVENT = {
 	ACCOUNT_SUMMARY: 'accountSummary',
-	ACCOUNT_SUMMARY_END: 'accountSummaryEnd'
+	ACCOUNT_SUMMARY_END: 'accountSummaryEnd',
+	UPDATE_ACCOUNT_TIMESTAMP: 'updateAccountTime',
+	UPDATE_ACCOUNT_VALUE: 'updateAccountValue',
+	UPDATE_PORTFOLIO: 'updatePortfolio',
+	ACCOUNT_DOWNLOAD_END: 'accountDownloadEnd'
 }
 
 export const EVENT = {
@@ -37,7 +42,7 @@ export const EVENT = {
 	ERROR: 'error',
 	MESSAGE: 'message',
 	DATA: 'data',
-	READY: 'ready',
+	READY: 'managedAccounts',
 	COMMAND_SEND: 'command'
 }
 
@@ -48,17 +53,21 @@ export const INTENT = {
 	OPEN_ORDERS: 'subscribe_open_orders',
 	POSITIONS: 'subscribe_closed_positions',
 	ACCOUNT_SUMMARY: 'account_summary',
-	INSTRUMENT_DETAIL: 'contract_detail'
+	INSTRUMENT_DETAIL: 'contract_detail',
+	HISTORICAL_DATA: 'historical_data',
+	PORTFOLIO: 'portfolio'
 }
 
 export const SUBSCRIPTION_TYPE = {
 	[INTENT.WATCHLIST]: 'MktData',
 	[INTENT.ORDERBOOK]: 'MktDepth',
 	[INTENT.OPEN_ORDERS]: 'OpenOrders',
-	[INTENT.RECENT_TRADES]: 'HistoricalData',
+	[INTENT.RECENT_TRADES]: 'RealTimeBars',
+	[INTENT.HISTORICAL_DATA]: 'HistoricalData',
 	[INTENT.POSITIONS]: 'Positions',
 	[INTENT.ACCOUNT_SUMMARY]: 'AccountSummary',
-	[INTENT.INSTRUMENT_DETAIL]: 'ContractDetails'
+	[INTENT.INSTRUMENT_DETAIL]: 'ContractDetails',
+	[INTENT.PORTFOLIO]: 'AccountUpdates'
 }
 
 export const SECURITY_TYPE = {
@@ -155,6 +164,14 @@ export const ORDERBOOK_OPERATION = {
 	INSERT: 0,
 	UPDATE: 1,
 	DELETE: 2
+}
+
+// ref: https://interactivebrokers.github.io/tws-api/historical_bars.html#hd_what_to_show
+export const DATA_TO_SHOW = {
+	TRADES: 'TRADES',
+	MIDPOINT: 'MIDPOINT',
+	BID: 'BID',
+	ASK: 'ASK'
 }
 
 // ref: https://interactivebrokers.github.io/tws-api/classIBApi_1_1EClient.html#a3e0d55d36cd416639b97ee6e47a86fe9
