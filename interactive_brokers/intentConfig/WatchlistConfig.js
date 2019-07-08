@@ -1,5 +1,4 @@
 import assert from 'assert'
-import { GENERIC_TICK, SECURITY_TYPE } from '../constants'
 import { makeContract } from '../utils'
 
 export default class {
@@ -12,13 +11,14 @@ export default class {
    * @param {boolean} regulatory - snapshot for US stocks requests NBBO snapshots for users which have "US Securities Snapshot Bundle" subscription but not corresponding Network A, B, or C subscription necessary for streaming * market data.
    */
 	constructor (exSymbol, secType, genericTickList, snapshot, regulatory) {
+		assert(exSymbol, 'exSymbol must be defined')
+		
 		this.exSymbol = exSymbol
 		this.secType = secType
 		this.genericTickList = genericTickList
 		this.snapshot = snapshot
 		this.regulatory = regulatory
 
-		assert(exSymbol, 'exSymbol must be defined')
 	}
 
 	toCommandParams (reqId) {

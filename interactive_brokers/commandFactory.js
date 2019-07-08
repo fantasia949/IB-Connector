@@ -13,6 +13,7 @@ import {
 } from './intentConfig'
 import * as icFactory from './intentConfig/factory'
 import NewsArticleConfig from './intentConfig/NewsArticleConfig'
+import RecentNewsConfig from './intentConfig/RecentNewsConfig'
 
 export const makeRequestSubscriptionCommand = (intent, reqId, config = icFactory.defaultIntentConfig()) => {
 	const subscriptionType = SUBSCRIPTION_TYPE[intent]
@@ -48,6 +49,9 @@ export const makeRequestSubscriptionCommand = (intent, reqId, config = icFactory
 			break
 		case INTENT.NEWS_ARTICLE:
 			assert(config instanceof NewsArticleConfig, 'Config must be instance of NewsArticleConfig')
+			break
+		case INTENT.RECENT_NEWS:
+			assert(config instanceof RecentNewsConfig, 'Config must be instance of RecentNewsConfig')
 			break
 	}
 

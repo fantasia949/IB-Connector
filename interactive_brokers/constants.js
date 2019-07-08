@@ -10,7 +10,7 @@ export const MARKETDATA_EVENT = {
 	TICK_SIZE: 'tickSize',
 	TICK_PRICE: 'tickPrice',
 	TICK_STRING: 'tickString',
-	TICK_NEWS: 'tickNews',
+	// TICK_NEWS: 'tickNews',
 	ORDERBOOK: 'updateMktDepth',
 	HISTORICAL_DATA: 'historicalData',
 	HISTORICAL_DATA_UPDATE: 'historicalDataUpdate',
@@ -66,11 +66,13 @@ export const INTENT = {
 	PORTFOLIO: 'portfolio',
 	NEWS_ARTICLE: 'news_article',
 	NEWS_PROVIDERS: 'news_providers',
-	HISTORICAL_NEWS: 'historical_news'
+	HISTORICAL_NEWS: 'historical_news',
+	RECENT_NEWS: 'recent_news'
 }
 
 export const SUBSCRIPTION_TYPE = {
 	[INTENT.WATCHLIST]: 'MktData',
+	[INTENT.RECENT_NEWS]: 'MktData',
 	[INTENT.ORDERBOOK]: 'MktDepth',
 	[INTENT.OPEN_ORDERS]: 'OpenOrders',
 	[INTENT.RECENT_TRADES]: 'RealTimeBars',
@@ -111,7 +113,8 @@ export const GENERIC_TICK = {
 	INVENTORY: 256, // Inventory
 	Fundamental_Ratios: 258, // Fundamental Ratios
 	REALTIME_HISTORICAL_VOLATILITY: 411, // Realtime Historical Volatility
-	IBDividends: 456, // IBDividends
+	IBDividends: 456, // IBDividends,
+	NEWS: 292,
 	DEFAULT: ''
 }
 
@@ -157,6 +160,7 @@ export const TICK_PRICE_FIELD = {
 
 export const TICK_STRING_FIELD = {
 	LAST_TRADED_TIMESTAMP: 45,
+	NEW_FEED: 62,
 	DELAYED_LAST_TRADED_TIMESTAMP: 88
 }
 

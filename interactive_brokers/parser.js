@@ -24,7 +24,8 @@ const tickSizeField = {
 
 const tickStringField = {
 	[TICK_STRING_FIELD.LAST_TRADED_TIMESTAMP]: 'lastTraded',
-	[TICK_STRING_FIELD.DELAYED_LAST_TRADED_TIMESTAMP]: 'lastTraded'
+	[TICK_STRING_FIELD.DELAYED_LAST_TRADED_TIMESTAMP]: 'lastTraded',
+	[TICK_STRING_FIELD.NEW_FEED]: 'newFeed'
 }
 
 const tickPriceField = {
@@ -67,19 +68,30 @@ const dataMapperFunc = {
 			field,
 			value
 		]
-	) => ({ reqId, [tickStringField[field]]: +value, _origField: field }),
+	) => {
+		const result = { reqId, _origField: field }
+
+		if (field === TICK_STRING_FIELD.NEW_FEED) {
+			const [articleId, time, providerCode, ...content] = value.split(' ')
+			Object.assign(result, { articleId, time, providerCode, content: content.join(' ') })
+		} else {
+			result[tickStringField[field]] = +value
+		}
+
+		return result
+	},
 
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ac2cf5a12822959fb0ce7e9f816157ea8
-	[MARKETDATA_EVENT.TICK_NEWS]: (
-		[
-			reqId,
-			timeStamp,
-			providerCode,
-			articleId,
-			headline,
-			extraData
-		]
-	) => ({ reqId, timeStamp, providerCode, articleId, headline, extraData }),
+	// [MARKETDATA_EVENT.TICK_NEWS]: (
+	// 	[
+	// 		reqId,
+	// 		timeStamp,
+	// 		providerCode,
+	// 		articleId,
+	// 		headline,
+	// 		extraData
+	// 	]
+	// ) => ({ reqId, timeStamp, providerCode, articleId, headline, extraData }),
 
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ab0d68c4cf7093f105095d72dd7e7a912
 	[MARKETDATA_EVENT.ORDERBOOK]: (

@@ -45,7 +45,7 @@ const main = async () => {
 
 	// testInstrumentDetail(ib, facebookSymbol)
 
-	testAccount(ib)
+	// testAccount(ib)
 
 	// testRecentTrades(ib, 'eur/usd', SECURITY_TYPE.FOREX)
 
@@ -67,6 +67,8 @@ const main = async () => {
 	// ])
 
 	// await testNewsArticle(ib, 'BRFG', 'BRFG$0af99099')
+
+	testRecentNews(ib, facebookSymbol, SECURITY_TYPE.STOCK, 'BRFG')
 
 	setTimeout(() => ib.disconnect(), 40 * 1000)
 }
@@ -208,4 +210,10 @@ const testHistoricalNews = (ib, contId, providerCodes) => {
 const testNewsArticle = async (ib, providerCode, articleId) => {
 	const entry = await ib.getNewsArticle(providerCode, articleId)
 	console.log(entry)
+}
+
+const testRecentNews = async (ib, exSymbol, secType, providerCode) => {
+	ib.subscribe(INTENT.RECENT_NEWS, icFactory.recentNewsConfig(exSymbol, secType, providerCode), (uuid, data, event) =>
+		console.log(uuid, exSymbol, data, event)
+	)
 }

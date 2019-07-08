@@ -101,4 +101,14 @@ export const historicalNewsConfig = (conId, providerCodes, startDateTime = '', e
  */
 export const newsArticleConfig = (providerCode, articleId) => new configs.NewsArticleConfig(providerCode, articleId)
 
+/**
+ *
+ * Creates an instance of RecentNewsConfig.
+ * @param {string} exSymbol
+ * @param {string} [secType=SECURITY_TYPE.STOCK]
+ * @param {string} providerCode
+ */
+export const recentNewsConfig = (exSymbol, secType = SECURITY_TYPE.STOCK, providerCode) =>
+	new configs.RecentNewsConfig(exSymbol, secType, providerCode)
+
 export const defaultIntentConfig = () => _defaultIntentConfig
