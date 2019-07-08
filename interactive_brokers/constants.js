@@ -10,6 +10,7 @@ export const MARKETDATA_EVENT = {
 	TICK_SIZE: 'tickSize',
 	TICK_PRICE: 'tickPrice',
 	TICK_STRING: 'tickString',
+	TICK_NEWS: 'tickNews',
 	ORDERBOOK: 'updateMktDepth',
 	HISTORICAL_DATA: 'historicalData',
 	HISTORICAL_DATA_UPDATE: 'historicalDataUpdate',
@@ -36,13 +37,20 @@ export const ACCOUNT_EVENT = {
 	ACCOUNT_DOWNLOAD_END: 'accountDownloadEnd'
 }
 
+export const NEWS_EVENT = {
+	NEWS_PROVIDERS: 'newsProviders',
+	HISTORICAL_NEWS: 'historicalNews',
+	HISTORICAL_NEWS_END: 'historicalNewsEnd',
+	NEWS_ARTICLE: 'newsArticle'
+}
+
 export const EVENT = {
 	OPEN: 'open',
 	CLOSE: 'close',
 	ERROR: 'error',
 	MESSAGE: 'message',
 	DATA: 'data',
-	READY: 'managedAccounts',
+	READY: 'ready',
 	COMMAND_SEND: 'command'
 }
 
@@ -55,7 +63,10 @@ export const INTENT = {
 	ACCOUNT_SUMMARY: 'account_summary',
 	INSTRUMENT_DETAIL: 'contract_detail',
 	HISTORICAL_DATA: 'historical_data',
-	PORTFOLIO: 'portfolio'
+	PORTFOLIO: 'portfolio',
+	NEWS_ARTICLE: 'news_article',
+	NEWS_PROVIDERS: 'news_providers',
+	HISTORICAL_NEWS: 'historical_news'
 }
 
 export const SUBSCRIPTION_TYPE = {
@@ -67,7 +78,10 @@ export const SUBSCRIPTION_TYPE = {
 	[INTENT.POSITIONS]: 'Positions',
 	[INTENT.ACCOUNT_SUMMARY]: 'AccountSummary',
 	[INTENT.INSTRUMENT_DETAIL]: 'ContractDetails',
-	[INTENT.PORTFOLIO]: 'AccountUpdates'
+	[INTENT.PORTFOLIO]: 'AccountUpdates',
+	[INTENT.NEWS_ARTICLE]: 'NewsArticle',
+	[INTENT.HISTORICAL_NEWS]: 'HistoricalNews',
+	[INTENT.NEWS_PROVIDERS]: 'NewsProviders'
 }
 
 export const SECURITY_TYPE = {

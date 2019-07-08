@@ -1,5 +1,3 @@
-import lmaxlondon_connector from './lmaxlondon'
-import hitbtc_connector from './hitbtc'
 import IbConnector from './interactive_brokers'
 import {
 	MARKET_DATA_TYPE,
@@ -9,27 +7,23 @@ import {
 	ORDER_TYPE,
 	ORDERBOOK_OPERATION,
 	ACCOUNT_EVENT,
-	MARKETDATA_EVENT
+	MARKETDATA_EVENT,
+	NEWS_EVENT
 } from './interactive_brokers/constants'
 
-// let lmaxlondon = new lmaxlondon_connector();
-// let hitbtc = new hitbtc_connector()
-import {
-	WatchlistConfig,
-	OrderbookConfig,
-	HistoricalDataConfig,
-	AccountSummaryConfig,
-	InstrumentDetailConfig,
-	RecentTradesConfig,
-	PortfolioConfig
-} from './interactive_brokers/intentConfigs'
-;(async () => {
+import * as icFactory from './interactive_brokers/intentConfig/factory'
+
+const main = async () => {
 	const credentials = {
 		username: 'hxvn0001',
 		password: 'Hydra2019'
 	}
 
+	const facebookConId = 107113386
+	const facebookSymbol = 'fb'
+
 	const ib = new IbConnector(credentials)
+
 	// free user must set market data subscription to DELAYED in order to get market data
 	ib.setMarketDataType(MARKET_DATA_TYPE.DELAYED)
 	ib.on(EVENT.ERROR, (uuid, err) => console.log(uuid, err))
@@ -39,40 +33,51 @@ import {
 	// every data got from IB will be logged here
 	// ib.on(EVENT.DATA, (uuid, data, event) => console.log(uuid, 'global', data, event))
 
+	console.log('connecting')
+
 	await ib.connect({ uuid: 'fb' })
 
-	const facebookSymbol = 'fb'
+	console.log('connected')
 
 	// testWatchlist(ib, facebookSymbol)
 
-	// testOrderbook('eur/usd', SECURITY_TYPE.FOREX)
+	// testOrderbook(ib, 'eur/usd', SECURITY_TYPE.FOREX)
 
 	// testInstrumentDetail(ib, facebookSymbol)
 
-	// testAccount(ib)
+	testAccount(ib)
 
 	// testRecentTrades(ib, 'eur/usd', SECURITY_TYPE.FOREX)
 
-	// testHistoricData('eur/usd', SECURITY_TYPE.FOREX)
+	// testHistoricData(ib, 'eur/usd', SECURITY_TYPE.FOREX)
 
 	// testPositions(ib)
 
-	// testOpenOrders(ib)
 	// testTrading(ib, facebookSymbol)
+	// setTimeout(() => testOpenOrders(ib), 4 * 1000)
 
 	// testPortfolio(ib)
 
-	setTimeout(() => ib.disconnect(), 40 * 1000)
-})()
+	// await testNewsProviders(ib)
 
-//lmaxlondon.subscribe('watchlist', 'socket_id', 'lmaxlondon:eur/usd');
-//hitbtc.subscribe('watchlist', 'socket','hitbtc:ltc/btc')
+	// testHistoricalNews(ib, facebookConId, [
+	// 	'BRFG',
+	// 	'BRFUPDN',
+	// 	'DJNL'
+	// ])
+
+	// await testNewsArticle(ib, 'BRFG', 'BRFG$0af99099')
+
+	setTimeout(() => ib.disconnect(), 40 * 1000)
+}
+
+main().catch(err => console.error(err))
 
 const testWatchlist = (ib, exSymbol, secType) => {
 	const watchlist = { bid: '-', ask: '-', last: '-', lastTraded: '-', volume: '-', close: '-', open: '-' }
 
 	let watchlistTimeoutId = undefined
-	ib.subscribe(INTENT.WATCHLIST, new WatchlistConfig(exSymbol, secType), (_, data) => {
+	ib.subscribe(INTENT.WATCHLIST, icFactory.watchlistConfig(exSymbol, secType), (_, data) => {
 		Object.keys(watchlist).filter(field => data[field] !== undefined).forEach(field => (watchlist[field] = data[field]))
 
 		clearTimeout(watchlistTimeoutId)
@@ -88,27 +93,31 @@ const testOrderbook = (ib, exSymbol, secType) => {
 	])
 	let orderbookTimeoutId = undefined
 
-	ib.subscribe(INTENT.ORDERBOOK, new OrderbookConfig(exSymbol, secType, 2), (_, { position, operation, side, price, size }) => {
-		switch (operation) {
-			case ORDERBOOK_OPERATION.INSERT:
-				orderbook[position][side] = { price, size }
-				break
-			case ORDERBOOK_OPERATION.UPDATE:
-				Object.assign(orderbook[position][side], JSON.parse(JSON.stringify({ price, size })))
-				break
-			case ORDERBOOK_OPERATION.DELETE:
-				orderbook[position][side] = { ...orderbookEntry }
-				break
-		}
+	ib.subscribe(
+		INTENT.ORDERBOOK,
+		icFactory.orderbookConfig(exSymbol, secType, 2),
+		(_, { position, operation, side, price, size }) => {
+			switch (operation) {
+				case ORDERBOOK_OPERATION.INSERT:
+					orderbook[position][side] = { price, size }
+					break
+				case ORDERBOOK_OPERATION.UPDATE:
+					Object.assign(orderbook[position][side], JSON.parse(JSON.stringify({ price, size })))
+					break
+				case ORDERBOOK_OPERATION.DELETE:
+					orderbook[position][side] = { ...orderbookEntry }
+					break
+			}
 
-		clearTimeout(orderbookTimeoutId)
-		orderbookTimeoutId = setTimeout(() => console.log(orderbook), 300)
-	})
+			clearTimeout(orderbookTimeoutId)
+			orderbookTimeoutId = setTimeout(() => console.log(orderbook), 300)
+		}
+	)
 }
 
 const testInstrumentDetail = (ib, exSymbol, secType) => {
 	const info = []
-	ib.subscribe(INTENT.INSTRUMENT_DETAIL, new InstrumentDetailConfig(exSymbol, secType), (_, entry, event) => {
+	ib.subscribe(INTENT.INSTRUMENT_DETAIL, icFactory.instrumentDetailConfig(exSymbol, secType), (_, entry, event) => {
 		if (event === MARKETDATA_EVENT.INSTRUMENT_DETAIL_END) {
 			console.log(info)
 		}
@@ -118,33 +127,38 @@ const testInstrumentDetail = (ib, exSymbol, secType) => {
 
 const testAccount = async ib => {
 	const account = {}
-	const accountReqId = await ib.subscribe(INTENT.ACCOUNT_SUMMARY, new AccountSummaryConfig(), (_, { tag, value }, event) => {
-		if (event === ACCOUNT_EVENT.ACCOUNT_SUMMARY_END) {
-			console.log(account)
-			ib.unsubscribe(INTENT.ACCOUNT_SUMMARY, accountReqId)
+	const accountReqId = await ib.subscribe(
+		INTENT.ACCOUNT_SUMMARY,
+		icFactory.accountSummaryConfig(),
+		(_, { tag, value }, event) => {
+			if (event === ACCOUNT_EVENT.ACCOUNT_SUMMARY_END) {
+				console.log(account)
+				ib.unsubscribe(INTENT.ACCOUNT_SUMMARY, accountReqId)
+			}
+			account[tag] = value
 		}
-		account[tag] = value
-	})
+	)
 }
 
 const testRecentTrades = (ib, exSymbol, secType, whatToShow) => {
-	ib.subscribe(INTENT.RECENT_TRADES, new RecentTradesConfig(exSymbol, secType, whatToShow), (uuid, data, event) =>
+	ib.subscribe(INTENT.RECENT_TRADES, icFactory.recentTradesConfig(exSymbol, secType, whatToShow), (uuid, data, event) =>
 		console.log(uuid, data, event)
 	)
 }
 
 const testHistoricData = (ib, exSymbol, secType, whatToShow) => {
-	ib.subscribe(INTENT.HISTORICAL_DATA, new HistoricalDataConfig(exSymbol, secType, whatToShow), (uuid, data, event) =>
-		console.log(uuid, facebookSymbol, data, event)
+	ib.subscribe(INTENT.HISTORICAL_DATA, icFactory.historicalDataConfig(exSymbol, secType, whatToShow), (uuid, data, event) =>
+		console.log(uuid, exSymbol, data, event)
 	)
 }
 
 const testPositions = ib => {
-	ib.subscribe(INTENT.POSITIONS, undefined, (uuid, data, event) => console.log(uuid, data, event))
+	ib.subscribe(INTENT.POSITIONS, icFactory.defaultIntentConfig(), (uuid, data, event) => console.log(uuid, data, event))
 }
 
-const testOpenOrders = ib => {
-	ib.subscribe(INTENT.OPEN_ORDERS, undefined, (uuid, data, event) => console.log(uuid, data, event))
+const testOpenOrders = async ib => {
+	const orders = await ib.getOpenOrders()
+	console.log(orders)
 }
 
 const testTrading = async (ib, facebookSymbol) => {
@@ -154,7 +168,7 @@ const testTrading = async (ib, facebookSymbol) => {
 
 const testPortfolio = ib => {
 	const account = {}
-	ib.subscribe(INTENT.PORTFOLIO, undefined, (uuid, data, event) => {
+	ib.subscribe(INTENT.PORTFOLIO, icFactory.defaultIntentConfig(), (uuid, data, event) => {
 		if (event === ACCOUNT_EVENT.ACCOUNT_DOWNLOAD_END) {
 			console.log(uuid, account)
 			ib.unsubscribe(INTENT.PORTFOLIO)
@@ -171,4 +185,27 @@ const testPortfolio = ib => {
 			console.log(uuid, data)
 		}
 	})
+}
+
+const testNewsProviders = async ib => {
+	const providers = await ib.getNewsProviders()
+	console.log(providers)
+}
+
+const testHistoricalNews = (ib, contId, providerCodes) => {
+	const newsList = []
+
+	ib.subscribe(INTENT.HISTORICAL_NEWS, icFactory.historicalNewsConfig(contId, providerCodes), (uuid, data, event) => {
+		if (event === NEWS_EVENT.HISTORICAL_NEWS_END) {
+			console.log(uuid, newsList)
+		}
+		if (event === NEWS_EVENT.HISTORICAL_NEWS) {
+			newsList.push(data)
+		}
+	})
+}
+
+const testNewsArticle = async (ib, providerCode, articleId) => {
+	const entry = await ib.getNewsArticle(providerCode, articleId)
+	console.log(entry)
 }

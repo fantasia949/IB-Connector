@@ -1,19 +1,29 @@
 import { INTENT, SUBSCRIPTION_TYPE, SECURITY_TYPE, ORDER_ACTION } from './constants'
 import { makeContract, makeOrder } from './utils'
 import assert from 'assert'
-import { defaultIntentConfig, RecentTradesConfig, HistoricalDataConfig, OrderbookConfig, WatchlistConfig, AccountSummaryConfig, InstrumentDetailConfig, PortfolioConfig } from './intentConfigs'
+import {
+	RecentTradesConfig,
+	HistoricalDataConfig,
+	OrderbookConfig,
+	WatchlistConfig,
+	AccountSummaryConfig,
+	InstrumentDetailConfig,
+	PortfolioConfig,
+	HistoricalNewsConfig
+} from './intentConfig'
+import * as icFactory from './intentConfig/factory'
+import NewsArticleConfig from './intentConfig/NewsArticleConfig'
 
-
-export const makeRequestSubscriptionCommand = (intent, reqId, config = defaultIntentConfig) => {
+export const makeRequestSubscriptionCommand = (intent, reqId, config = icFactory.defaultIntentConfig()) => {
 	const subscriptionType = SUBSCRIPTION_TYPE[intent]
-	
+
 	assert(subscriptionType, 'This intent is not supported: ' + intent)
-	
+
 	const command = 'req' + subscriptionType
 
 	switch (intent) {
 		case INTENT.RECENT_TRADES:
-			assert( config instanceof RecentTradesConfig, 'Config must be instance of RecentTradesConfig')
+			assert(config instanceof RecentTradesConfig, 'Config must be instance of RecentTradesConfig')
 			break
 		case INTENT.HISTORICAL_DATA:
 			assert(config instanceof HistoricalDataConfig, 'Config must be instance of HistoricalDataConfig')
@@ -33,9 +43,15 @@ export const makeRequestSubscriptionCommand = (intent, reqId, config = defaultIn
 		case INTENT.PORTFOLIO:
 			assert(config instanceof PortfolioConfig, 'Config must be instance of PortfolioConfig')
 			break
+		case INTENT.HISTORICAL_NEWS:
+			assert(config instanceof HistoricalNewsConfig, 'Config must be instance of HistoricalNewsConfig')
+			break
+		case INTENT.NEWS_ARTICLE:
+			assert(config instanceof NewsArticleConfig, 'Config must be instance of NewsArticleConfig')
+			break
 	}
 
-	const args = config.toCommandParams(reqId)
+	const args = reqId !== undefined ? config.toCommandParams(reqId) : config.toCommandParams()
 
 	return { command, args }
 }

@@ -1,7 +1,7 @@
 import assert from 'assert'
 import websocket_connection_manager from '../websocket_connection_manager'
 import EventEmitter from 'events'
-import { MARKET_DATA_TYPE, EVENT, TRADE_EVENT, INTENT } from './constants'
+import { MARKET_DATA_TYPE, EVENT, TRADE_EVENT, INTENT, NEWS_EVENT } from './constants'
 import { parseMessage } from './parser'
 import {
 	makeRequestSubscriptionCommand,
@@ -9,7 +9,7 @@ import {
 	makePlaceOrderCommand,
 	makeCancelOrderCommand
 } from './commandFactory'
-import { PortfolioConfig } from './intentConfigs'
+import * as icFactory from './intentConfig/factory'
 
 const { subscribe, unsubscribe } = new websocket_connection_manager()
 
@@ -72,14 +72,19 @@ class IbConnector extends EventEmitter {
 	 * Start listening an instrument
 	 *
 	 * @param {string} intent
-	 * @param {SubscriptionConfig} [config={}]
+	 * @param {SubscriptionConfig} config
 	 * @param {subscriptionCallback=} cb
 	 * @returns {number} request ID
 	 * @memberof IbConnector
 	 */
 	onSubscription (intent, config, cb) {
 		if (intent === INTENT.PORTFOLIO) {
-			const message = makeRequestSubscriptionCommand(intent, true, new PortfolioConfig(this.account))
+			const message = makeRequestSubscriptionCommand(intent, true, icFactory.portfolioConfig(this.account))
+			this._sendCommand(message)
+			this._responseHandlers[intent] = cb
+			return
+		} else if (intent === INTENT.NEWS_BULLETINS) {
+			const message = makeRequestSubscriptionCommand(intent, true, config)
 			this._sendCommand(message)
 			this._responseHandlers[intent] = cb
 			return
@@ -106,7 +111,7 @@ class IbConnector extends EventEmitter {
 	 */
 	offSubscription (intent, reqId) {
 		if (intent === INTENT.PORTFOLIO) {
-			const message = makeRequestSubscriptionCommand(intent, false, new PortfolioConfig(this.account))
+			const message = makeRequestSubscriptionCommand(intent, false, icFactory.portfolioConfig(this.account))
 			this._sendCommand(message)
 
 			if (this._responseHandlers[intent]) {
@@ -114,6 +119,13 @@ class IbConnector extends EventEmitter {
 			}
 
 			return
+		} else if (intent === INTENT.NEWS_BULLETINS) {
+			const message = makeCancelSubscriptionCommand(intent, reqId)
+			this._sendCommand(message)
+
+			if (this._responseHandlers[intent]) {
+				this._responseHandlers[intent] = undefined
+			}
 		}
 
 		const message = makeCancelSubscriptionCommand(intent, reqId)
@@ -122,6 +134,41 @@ class IbConnector extends EventEmitter {
 		if (this._responseHandlers[reqId]) {
 			this._responseHandlers[reqId] = undefined
 		}
+	}
+
+	async getNewsProviders () {
+		const command = makeRequestSubscriptionCommand(INTENT.NEWS_PROVIDERS)
+		const response = await this._getData(command, NEWS_EVENT.NEWS_PROVIDERS)
+		const { data } = parseMessage(response)
+		return data.entries
+	}
+
+	async getNewsArticle (providerCode, articleId) {
+		const command = makeRequestSubscriptionCommand(
+			INTENT.NEWS_ARTICLE,
+			this._socket.getReqId(),
+			icFactory.newsArticleConfig(providerCode, articleId)
+		)
+
+		const response = await this._getData(command, NEWS_EVENT.NEWS_ARTICLE)
+		const { data } = parseMessage(response)
+		return data.entries
+	}
+
+	async getOpenOrders () {
+		const command = makeRequestSubscriptionCommand(INTENT.OPEN_ORDERS)
+		const response = await this._getData(
+			command,
+			TRADE_EVENT.ORDER_OPEN_END,
+			TRADE_EVENT.ORDER_OPEN,
+			(result, message) => [
+				...result,
+				parseMessage(message).data
+			],
+			[]
+		)
+
+		return response.data
 	}
 
 	/**
@@ -148,25 +195,23 @@ class IbConnector extends EventEmitter {
 	 * @param {OrderConfig} orderConfig
 	 * @memberof IbConnector
 	 */
-	placeOrder (exSymbol, orderType, quantity, orderConfig) {
-		return new Promise(resolve => {
-			this._onceMessageEvent(TRADE_EVENT.NEXT_ORDER_ID, data => {
-				const [
-					orderId
-				] = data
-				const message = makePlaceOrderCommand(orderId, orderType, exSymbol, quantity, orderConfig)
-				this._sendCommand(message)
+	async placeOrder (exSymbol, orderType, quantity, orderConfig) {
+		const getOrderICommand = {
+			command: 'reqIds',
+			args: [
+				1
+			]
+		}
 
-				resolve(orderId)
-			})
+		const { data } = await this._getData(getOrderICommand, TRADE_EVENT.NEXT_ORDER_ID)
+		const [
+			orderId
+		] = data
 
-			this._sendCommand({
-				command: 'reqIds',
-				args: [
-					1
-				]
-			})
-		})
+		const message = makePlaceOrderCommand(orderId, orderType, exSymbol, quantity, orderConfig)
+		this._sendCommand(message)
+
+		return orderId
 	}
 
 	/**
@@ -201,8 +246,8 @@ class IbConnector extends EventEmitter {
 
 			this._socket = socket
 
-			this._onceMessageEvent(EVENT.READY, data => {
-				this.account = data[0]
+			this._onceMessageEvent(EVENT.READY, account => {
+				this.account = account
 
 				if (this._marketDataType !== undefined) {
 					this._sendCommand({
@@ -242,6 +287,25 @@ class IbConnector extends EventEmitter {
 		this._socket = undefined
 
 		return unsubscribe(socket)
+	}
+
+	_getData (command, completeEvent, acumulateEvent, onAcumulate, initialAcumulatedData) {
+		return new Promise(resolve => {
+			this._sendCommand(command)
+
+			let acumulatedData = initialAcumulatedData
+
+			if (acumulateEvent) {
+				this._onceMessageEvent(acumulateEvent, (data, event) => {
+					acumulatedData = onAcumulate(acumulatedData, data, event)
+					console.log(data, acumulatedData);
+				})
+			}
+
+			this._onceMessageEvent(completeEvent, (data, event) => {
+				resolve({ data: acumulateEvent ? acumulatedData : data, event })
+			})
+		})
 	}
 
 	_onMessage (message, { uuid }) {
@@ -331,7 +395,7 @@ class IbConnector extends EventEmitter {
 			const { event, data } = JSON.parse(message)
 			if (event === eventName) {
 				socket.off(EVENT.MESSAGE, onMessage)
-				cb(data)
+				cb(data, eventName)
 			}
 		}
 

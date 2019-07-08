@@ -5,7 +5,8 @@ import {
 	MARKETDATA_EVENT,
 	TRADE_EVENT,
 	ACCOUNT_EVENT,
-	INTENT
+	INTENT,
+	NEWS_EVENT
 } from './constants'
 import { reqIdMappingFunc } from './utils'
 import assert from 'assert'
@@ -68,6 +69,18 @@ const dataMapperFunc = {
 		]
 	) => ({ reqId, [tickStringField[field]]: +value, _origField: field }),
 
+	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ac2cf5a12822959fb0ce7e9f816157ea8
+	[MARKETDATA_EVENT.TICK_NEWS]: (
+		[
+			reqId,
+			timeStamp,
+			providerCode,
+			articleId,
+			headline,
+			extraData
+		]
+	) => ({ reqId, timeStamp, providerCode, articleId, headline, extraData }),
+
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ab0d68c4cf7093f105095d72dd7e7a912
 	[MARKETDATA_EVENT.ORDERBOOK]: (
 		[
@@ -129,9 +142,9 @@ const dataMapperFunc = {
 			order,
 			orderState
 		]
-	) => ({ orderId, contract, order, orderState }),
+	) => ({ orderId, contract, order, orderState, intent: INTENT.OPEN_ORDERS }),
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ab86caf7ed61e14d9b5609e8dd60b93e1
-	[TRADE_EVENT.ORDER_OPEN_END]: reqIdMappingFunc,
+	[TRADE_EVENT.ORDER_OPEN_END]: () => ({ intent: INTENT.OPEN_ORDERS }),
 
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a17f2a02d6449710b6394d0266a353313
 	[TRADE_EVENT.ORDER_STATUS]: (
@@ -158,7 +171,7 @@ const dataMapperFunc = {
 			pos,
 			avgCost
 		]
-	) => ({ account, symbol, exchange, currency, pos, avgCost }),
+	) => ({ account, symbol, exchange, currency, pos, avgCost, intent: INTENT.POSITIONS }),
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#acf1bebfc1b29cbeff32da7d53aec0971
 	[TRADE_EVENT.POSITION_END]: reqIdMappingFunc,
 
@@ -180,10 +193,23 @@ const dataMapperFunc = {
 	[MARKETDATA_EVENT.INSTRUMENT_DETAIL]: (
 		[
 			reqId,
-			{ marketName, minTick, orderTypes, validExchanges, longName, industry, category, subcategory, tradingHours, issueDate }
+			{
+				summary,
+				marketName,
+				minTick,
+				orderTypes,
+				validExchanges,
+				longName,
+				industry,
+				category,
+				subcategory,
+				tradingHours,
+				issueDate
+			}
 		]
 	) => ({
 		reqId,
+		conId: summary.conId,
 		marketName,
 		minTick,
 		orderTypes,
@@ -226,7 +252,7 @@ const dataMapperFunc = {
 			accountName
 		]
 	) => ({
-		intent: INTENT.PORTFOLIO, // useful for cb
+		intent: INTENT.PORTFOLIO,
 		conId,
 		symbol,
 		exchange,
@@ -261,13 +287,61 @@ const dataMapperFunc = {
 		[
 			account
 		]
-	) => ({ account, intent: INTENT.PORTFOLIO })
+	) => ({ account, intent: INTENT.PORTFOLIO }),
+
+	[NEWS_EVENT.NEWS_BULLETIN]: (
+		[
+			msgId,
+			msgType,
+			message,
+			origExchange
+		]
+	) => ({ msgId, msgType, message, origExchange, intent: INTENT.NEWS_BULLETINS }),
+
+	// https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a95c50b5aa2d2a8ffd8592ccdeb28a6dd
+	[NEWS_EVENT.NEWS_PROVIDERS]: entries => ({
+		entries: entries.map(([ length, ...providers
+		]) =>
+			Array.from({ length }, (_, i) => [
+				providers[i * 2],
+				providers[i * 2 + 1]
+			])
+		),
+		intent: INTENT.NEWS_PROVIDERS
+	}),
+
+	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a4d87a50aa3a688d0e2a48519a369f962
+	[NEWS_EVENT.HISTORICAL_NEWS]: (
+		[
+			reqId,
+			time,
+			providerCode,
+			articleId,
+			headline
+		]
+	) => ({ reqId, time, providerCode, articleId, headline }),
+
+	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a64f8b7ff5e488ab1739323cbe87e1ec3
+	[NEWS_EVENT.HISTORICAL_NEWS_END]: (
+		[
+			reqId,
+			hasMore
+		]
+	) => ({ reqId, hasMore }),
+
+	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a0338a042127bcd160d5f272991ac7e52
+	[NEWS_EVENT.NEWS_ARTICLE]: (
+		[
+			reqId,
+			articleType,
+			articleText
+		]
+	) => ({ reqId, articleType, articleText })
 }
 
 export const parseMessage = message => {
 	assert(message, 'Message is undefined')
-
-	const { event, data } = JSON.parse(message)
+	const { event, data } = typeof message === 'string' ? JSON.parse(message) : message
 
 	const func = dataMapperFunc[event]
 

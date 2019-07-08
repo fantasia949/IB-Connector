@@ -9,7 +9,7 @@
     "path": "^0.12.7",
     "webpack-cli": "^3.3.0",
     "webpack-notifier": "^1.7.0",
-    "ws": "^6.2.1"
+    "ws": "^7.0.1"
   },
   "devDependencies": {
     "webpack": "^4.30.0",
