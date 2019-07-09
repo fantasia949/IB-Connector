@@ -9,7 +9,8 @@ import {
 	AccountSummaryConfig,
 	InstrumentDetailConfig,
 	PortfolioConfig,
-	HistoricalNewsConfig
+	HistoricalNewsConfig,
+	MatchingSymbolsConfig
 } from './intentConfig'
 import * as icFactory from './intentConfig/factory'
 import NewsArticleConfig from './intentConfig/NewsArticleConfig'
@@ -52,6 +53,9 @@ export const makeRequestSubscriptionCommand = (intent, reqId, config = icFactory
 			break
 		case INTENT.RECENT_NEWS:
 			assert(config instanceof RecentNewsConfig, 'Config must be instance of RecentNewsConfig')
+			break
+		case INTENT.MATCHING_SYMBOLS:
+			assert(config instanceof MatchingSymbolsConfig, 'Config must be instance of MatchingSymbolsConfig')
 			break
 	}
 

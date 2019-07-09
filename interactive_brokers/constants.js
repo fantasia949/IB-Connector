@@ -17,11 +17,14 @@ export const MARKETDATA_EVENT = {
 	HISTORICAL_DATA_END: 'historicalDataEnd',
 	INSTRUMENT_DETAIL: 'contractDetails',
 	INSTRUMENT_DETAIL_END: 'contractDetailsEnd',
-	RECENT_TRADES: 'realtimeBar'
+	RECENT_TRADES: 'realtimeBar',
+	SYMBOL_SAMPLES: 'symbolSamples'
 }
 export const TRADE_EVENT = {
 	ORDER_OPEN: 'openOrder',
 	ORDER_OPEN_END: 'openOrderEnd',
+	ORDER_COMPLETED: 'completedOrder',
+	ORDER_COMPLETED_END: 'completedOrdersEnd',
 	ORDER_STATUS: 'orderStatus',
 	POSITION: 'position',
 	POSITION_END: 'positionEnd',
@@ -59,6 +62,7 @@ export const INTENT = {
 	ORDERBOOK: 'orderbook',
 	WATCHLIST: 'watchlist',
 	OPEN_ORDERS: 'subscribe_open_orders',
+	COMPLETED_ORDERS: 'subscribe_completed_orders',
 	POSITIONS: 'subscribe_closed_positions',
 	ACCOUNT_SUMMARY: 'account_summary',
 	INSTRUMENT_DETAIL: 'contract_detail',
@@ -67,7 +71,8 @@ export const INTENT = {
 	NEWS_ARTICLE: 'news_article',
 	NEWS_PROVIDERS: 'news_providers',
 	HISTORICAL_NEWS: 'historical_news',
-	RECENT_NEWS: 'recent_news'
+	RECENT_NEWS: 'recent_news',
+	MATCHING_SYMBOLS: 'matching_symbols'
 }
 
 export const SUBSCRIPTION_TYPE = {
@@ -75,6 +80,7 @@ export const SUBSCRIPTION_TYPE = {
 	[INTENT.RECENT_NEWS]: 'MktData',
 	[INTENT.ORDERBOOK]: 'MktDepth',
 	[INTENT.OPEN_ORDERS]: 'OpenOrders',
+	[INTENT.COMPLETED_ORDERS]: 'CompletedOrders',
 	[INTENT.RECENT_TRADES]: 'RealTimeBars',
 	[INTENT.HISTORICAL_DATA]: 'HistoricalData',
 	[INTENT.POSITIONS]: 'Positions',
@@ -83,7 +89,8 @@ export const SUBSCRIPTION_TYPE = {
 	[INTENT.PORTFOLIO]: 'AccountUpdates',
 	[INTENT.NEWS_ARTICLE]: 'NewsArticle',
 	[INTENT.HISTORICAL_NEWS]: 'HistoricalNews',
-	[INTENT.NEWS_PROVIDERS]: 'NewsProviders'
+	[INTENT.NEWS_PROVIDERS]: 'NewsProviders',
+	[INTENT.MATCHING_SYMBOLS]: 'MatchingSymbols'
 }
 
 export const SECURITY_TYPE = {

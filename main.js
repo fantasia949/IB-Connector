@@ -28,6 +28,7 @@ const main = async () => {
 	ib.setMarketDataType(MARKET_DATA_TYPE.DELAYED)
 	ib.on(EVENT.ERROR, (uuid, err) => console.log(uuid, err))
 	ib.on(EVENT.CLOSE, uuid => console.log(uuid, 'disconnected'))
+	ib.on(EVENT.MESSAGE, message => console.log(uuid, message))
 	// every command sent to IB will be logged here
 	ib.on(EVENT.COMMAND_SEND, message => console.log(JSON.stringify(message)))
 	// every data got from IB will be logged here
@@ -68,7 +69,12 @@ const main = async () => {
 
 	// await testNewsArticle(ib, 'BRFG', 'BRFG$0af99099')
 
-	testRecentNews(ib, facebookSymbol, SECURITY_TYPE.STOCK, 'BRFG')
+	// testRecentNews(ib, facebookSymbol, SECURITY_TYPE.STOCK, 'BRFG')
+
+	await testMatchingSymbols(ib, facebookSymbol)
+
+	// not work now
+	// await testCompletedOrders(ib)
 
 	setTimeout(() => ib.disconnect(), 40 * 1000)
 }
@@ -163,6 +169,11 @@ const testOpenOrders = async ib => {
 	console.log(orders)
 }
 
+const testCompletedOrders = async ib => {
+	const orders = await ib.getCompletedOrders()
+	console.log(orders)
+}
+
 const testTrading = async (ib, facebookSymbol) => {
 	const orderId = await ib.placeOrder(facebookSymbol, ORDER_TYPE.LIMIT, 10, { price: 0.01 })
 	setTimeout(() => ib.cancelOrder(orderId), 8 * 1000)
@@ -216,4 +227,9 @@ const testRecentNews = async (ib, exSymbol, secType, providerCode) => {
 	ib.subscribe(INTENT.RECENT_NEWS, icFactory.recentNewsConfig(exSymbol, secType, providerCode), (uuid, data, event) =>
 		console.log(uuid, exSymbol, data, event)
 	)
+}
+
+const testMatchingSymbols = async (ib, pattern) => {
+	const entry = await ib.getMatchingSymbols(pattern)
+	console.log(entry)
 }

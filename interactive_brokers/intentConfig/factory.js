@@ -111,4 +111,6 @@ export const newsArticleConfig = (providerCode, articleId) => new configs.NewsAr
 export const recentNewsConfig = (exSymbol, secType = SECURITY_TYPE.STOCK, providerCode) =>
 	new configs.RecentNewsConfig(exSymbol, secType, providerCode)
 
+export const matchingSymbolsConfig = pattern => new configs.MatchingSymbolsConfig(pattern)
+
 export const defaultIntentConfig = () => _defaultIntentConfig

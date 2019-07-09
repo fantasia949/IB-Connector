@@ -1,7 +1,7 @@
 import assert from 'assert'
 import websocket_connection_manager from '../websocket_connection_manager'
 import EventEmitter from 'events'
-import { MARKET_DATA_TYPE, EVENT, TRADE_EVENT, INTENT, NEWS_EVENT } from './constants'
+import { MARKET_DATA_TYPE, EVENT, TRADE_EVENT, INTENT, NEWS_EVENT, MARKETDATA_EVENT } from './constants'
 import { parseMessage } from './parser'
 import {
 	makeRequestSubscriptionCommand,
@@ -143,6 +143,17 @@ class IbConnector extends EventEmitter {
 		return data.entries
 	}
 
+	async getMatchingSymbols (pattern) {
+		const command = makeRequestSubscriptionCommand(
+			INTENT.MATCHING_SYMBOLS,
+			this._socket.getReqId(),
+			icFactory.matchingSymbolsConfig(pattern)
+		)
+		const response = await this._getData(command, MARKETDATA_EVENT.SYMBOL_SAMPLES)
+		const { data } = parseMessage(response)
+		return data.entries
+	}
+
 	async getNewsArticle (providerCode, articleId) {
 		const command = makeRequestSubscriptionCommand(
 			INTENT.NEWS_ARTICLE,
@@ -161,6 +172,22 @@ class IbConnector extends EventEmitter {
 			command,
 			TRADE_EVENT.ORDER_OPEN_END,
 			TRADE_EVENT.ORDER_OPEN,
+			(result, message) => [
+				...result,
+				parseMessage(message).data
+			],
+			[]
+		)
+
+		return response.data
+	}
+
+	async getCompletedOrders () {
+		const command = makeRequestSubscriptionCommand(INTENT.COMPLETED_ORDERS)
+		const response = await this._getData(
+			command,
+			TRADE_EVENT.ORDER_COMPLETED_END,
+			TRADE_EVENT.ORDER_COMPLETED,
 			(result, message) => [
 				...result,
 				parseMessage(message).data
@@ -298,7 +325,6 @@ class IbConnector extends EventEmitter {
 			if (acumulateEvent) {
 				this._onceMessageEvent(acumulateEvent, (data, event) => {
 					acumulatedData = onAcumulate(acumulatedData, data, event)
-					console.log(data, acumulatedData);
 				})
 			}
 

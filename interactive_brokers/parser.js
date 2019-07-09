@@ -348,7 +348,15 @@ const dataMapperFunc = {
 			articleType,
 			articleText
 		]
-	) => ({ reqId, articleType, articleText })
+	) => ({ reqId, articleType, articleText }),
+
+	// ref: http://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a82cfd0c663944c5e6d4fee8ebd482ecf
+	[MARKETDATA_EVENT.SYMBOL_SAMPLES]: (
+		[
+			reqId,
+			entries
+		]
+	) => ({ reqId, entries })
 }
 
 export const parseMessage = message => {
