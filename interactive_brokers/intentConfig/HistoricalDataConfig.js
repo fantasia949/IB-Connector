@@ -1,6 +1,6 @@
 import assert from 'assert'
 import { makeContract } from '../utils'
-export default class {
+export default class HistoricalDataConfig {
 	/**
 	 *Creates an instance of HistoricalDataConfig.
 	 * @param {string} exSymbol

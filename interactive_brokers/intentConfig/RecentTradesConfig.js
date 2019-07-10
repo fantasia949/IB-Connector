@@ -1,6 +1,6 @@
 import assert from 'assert'
 import { makeContract } from '../utils'
-export default class {
+export default class RecentTradesConfig {
 	/**
  *Creates an instance of RecentTradesConfig.
  * @param {string} exSymbol

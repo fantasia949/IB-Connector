@@ -43,7 +43,7 @@ const main = async () => {
 	console.log('connected')
 
 	// testWatchlist(ib, facebookSymbol)
-	testWatchlistSnapshot(ib, facebookSymbol)
+	// testWatchlistSnapshot(ib, facebookSymbol)
 
 	// testOrderbook(ib, 'eur/usd', SECURITY_TYPE.FOREX)
 
@@ -51,7 +51,7 @@ const main = async () => {
 
 	// testAccount(ib)
 
-	// testRecentTrades(ib, 'eur/usd', SECURITY_TYPE.FOREX)
+	testRecentTrades(ib, 'eur/usd', SECURITY_TYPE.FOREX)
 
 	// testHistoricData(ib, 'eur/usd', SECURITY_TYPE.FOREX)
 

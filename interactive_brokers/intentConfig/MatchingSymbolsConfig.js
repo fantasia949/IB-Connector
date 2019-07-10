@@ -1,5 +1,5 @@
 import assert from 'assert'
-export default class {
+export default class MatchingSymbolsConfig {
 	/**
 	 *Creates an instance of MatchingSymbolsConfig.
 	 * @param {string} pattern

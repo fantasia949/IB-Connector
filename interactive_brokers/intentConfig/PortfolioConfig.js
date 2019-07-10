@@ -1,4 +1,4 @@
-export default class {
+export default class PortfolioConfig {
 	/**
 	 *Creates an instance of PortfolioConfig.
 	 * @param {string} account

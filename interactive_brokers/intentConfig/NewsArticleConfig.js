@@ -1,5 +1,5 @@
 import assert from 'assert'
-export default class {
+export default class NewsArticleConfig {
 	/**
 	 *Creates an instance of NewsArticleConfig.
 	 * @param {string} providerCode

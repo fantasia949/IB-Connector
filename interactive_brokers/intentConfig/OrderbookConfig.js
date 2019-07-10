@@ -2,7 +2,7 @@ import assert from 'assert'
 import { SECURITY_TYPE } from '../constants'
 import { makeContract } from '../utils'
 
-export default class {
+export default class OrderbookConfig {
 	/**
  *Creates an instance of OrderbookConfig.
  * @param {string} exSymbol

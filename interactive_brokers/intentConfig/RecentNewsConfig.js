@@ -2,7 +2,7 @@ import assert from 'assert'
 import { makeContract } from '../utils'
 import { GENERIC_TICK } from '../constants'
 
-export default class {
+export default class RecentNewsConfig{
 	/**
    * Creates an instance of RecentNewsConfig.
    * @param {string} exSymbol

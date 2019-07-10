@@ -1,7 +1,7 @@
 import assert from 'assert'
 import { makeContract } from '../utils'
 
-export default class {
+export default class WatchlistConfig {
 	/**
    * Creates an instance of WatchlistConfig.
    * @param {string} exSymbol

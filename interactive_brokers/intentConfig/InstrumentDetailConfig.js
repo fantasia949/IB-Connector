@@ -1,6 +1,6 @@
 import assert from 'assert'
 import { makeContract } from '../utils'
-export default class {
+export default class InstrumentDetailConfig {
 	/**
  *Creates an instance of InstrumentDetailConfig.
  * @param {string} exSymbol

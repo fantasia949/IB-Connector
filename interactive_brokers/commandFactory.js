@@ -10,11 +10,14 @@ import {
 	InstrumentDetailConfig,
 	PortfolioConfig,
 	HistoricalNewsConfig,
-	MatchingSymbolsConfig
+	MatchingSymbolsConfig,
+	NewsArticleConfig,
+	RecentNewsConfig
 } from './intentConfig'
 import * as icFactory from './intentConfig/factory'
-import NewsArticleConfig from './intentConfig/NewsArticleConfig'
-import RecentNewsConfig from './intentConfig/RecentNewsConfig'
+
+const assertType = (actualConfig, expectedType) =>
+	assert(actualConfig instanceof expectedType, `Config must be instance of ${expectedType.name}`)
 
 export const makeRequestSubscriptionCommand = (intent, reqId, config = icFactory.defaultIntentConfig()) => {
 	const subscriptionType = SUBSCRIPTION_TYPE[intent]
@@ -25,37 +28,37 @@ export const makeRequestSubscriptionCommand = (intent, reqId, config = icFactory
 
 	switch (intent) {
 		case INTENT.RECENT_TRADES:
-			assert(config instanceof RecentTradesConfig, 'Config must be instance of RecentTradesConfig')
+			assertType(config, RecentTradesConfig)
 			break
 		case INTENT.HISTORICAL_DATA:
-			assert(config instanceof HistoricalDataConfig, 'Config must be instance of HistoricalDataConfig')
+			assertType(config, HistoricalDataConfig)
 			break
 		case INTENT.ORDERBOOK:
-			assert(config instanceof OrderbookConfig, 'Config must be instance of OrderbookConfig')
+			assertType(config, OrderbookConfig)
 			break
 		case INTENT.WATCHLIST:
-			assert(config instanceof WatchlistConfig, 'Config must be instance of WatchlistConfig')
+			assertType(config, WatchlistConfig)
 			break
 		case INTENT.ACCOUNT_SUMMARY:
-			assert(config instanceof AccountSummaryConfig, 'Config must be instance of AccountSummaryConfig')
+			assertType(config, AccountSummaryConfig)
 			break
 		case INTENT.INSTRUMENT_DETAIL:
-			assert(config instanceof InstrumentDetailConfig, 'Config must be instance of InstrumentDetailConfig')
+			assertType(config, InstrumentDetailConfig)
 			break
 		case INTENT.PORTFOLIO:
-			assert(config instanceof PortfolioConfig, 'Config must be instance of PortfolioConfig')
+			assertType(config, PortfolioConfig)
 			break
 		case INTENT.HISTORICAL_NEWS:
-			assert(config instanceof HistoricalNewsConfig, 'Config must be instance of HistoricalNewsConfig')
+			assertType(config, HistoricalNewsConfig)
 			break
 		case INTENT.NEWS_ARTICLE:
-			assert(config instanceof NewsArticleConfig, 'Config must be instance of NewsArticleConfig')
+			assertType(config, NewsArticleConfig)
 			break
 		case INTENT.RECENT_NEWS:
-			assert(config instanceof RecentNewsConfig, 'Config must be instance of RecentNewsConfig')
+			assertType(config, RecentNewsConfig)
 			break
 		case INTENT.MATCHING_SYMBOLS:
-			assert(config instanceof MatchingSymbolsConfig, 'Config must be instance of MatchingSymbolsConfig')
+			assertType(config, MatchingSymbolsConfig)
 			break
 	}
 
