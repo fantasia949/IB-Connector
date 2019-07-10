@@ -8,27 +8,29 @@ import {
 	ORDERBOOK_OPERATION,
 	ACCOUNT_EVENT,
 	MARKETDATA_EVENT,
-	NEWS_EVENT
+	NEWS_EVENT,
+	SERVER_LOG_LEVEL
 } from './interactive_brokers/constants'
 
 import * as icFactory from './interactive_brokers/intentConfig/factory'
 
 const main = async () => {
-	const credentials = {
+	const connectorConfig = {
 		username: 'hxvn0001',
-		password: 'Hydra2019'
+		password: 'Hydra2019',
+		serverLogLevel: SERVER_LOG_LEVEL.DETAIL,
+		// free user must set market data subscription to DELAYED in order to get market data
+		marketDataType: MARKET_DATA_TYPE.DELAYED
 	}
 
 	const facebookConId = 107113386
 	const facebookSymbol = 'fb'
 
-	const ib = new IbConnector(credentials)
+	const ib = new IbConnector(connectorConfig)
 
-	// free user must set market data subscription to DELAYED in order to get market data
-	ib.setMarketDataType(MARKET_DATA_TYPE.DELAYED)
 	ib.on(EVENT.ERROR, (uuid, err) => console.log(uuid, err))
 	ib.on(EVENT.CLOSE, uuid => console.log(uuid, 'disconnected'))
-	ib.on(EVENT.MESSAGE, message => console.log(uuid, message))
+	// ib.on(EVENT.MESSAGE, message => console.log(uuid, message))
 	// every command sent to IB will be logged here
 	ib.on(EVENT.COMMAND_SEND, message => console.log(JSON.stringify(message)))
 	// every data got from IB will be logged here
@@ -41,6 +43,7 @@ const main = async () => {
 	console.log('connected')
 
 	// testWatchlist(ib, facebookSymbol)
+	testWatchlistSnapshot(ib, facebookSymbol)
 
 	// testOrderbook(ib, 'eur/usd', SECURITY_TYPE.FOREX)
 
@@ -71,7 +74,7 @@ const main = async () => {
 
 	// testRecentNews(ib, facebookSymbol, SECURITY_TYPE.STOCK, 'BRFG')
 
-	await testMatchingSymbols(ib, facebookSymbol)
+	// await testMatchingSymbols(ib, facebookSymbol)
 
 	// not work now
 	// await testCompletedOrders(ib)
@@ -91,6 +94,11 @@ const testWatchlist = (ib, exSymbol, secType) => {
 		clearTimeout(watchlistTimeoutId)
 		watchlistTimeoutId = setTimeout(() => console.log(watchlist), 300)
 	})
+}
+
+const testWatchlistSnapshot = async (ib, exSymbol, secType) => {
+	const result = await ib.getMarketdataSnapshot(exSymbol, secType)
+	console.log(result)
 }
 
 const testOrderbook = (ib, exSymbol, secType) => {

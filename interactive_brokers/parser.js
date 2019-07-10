@@ -49,17 +49,16 @@ const dataMapperFunc = {
 			field,
 			size
 		]
-	) => ({ reqId, [tickSizeField[field]]: size, _origField: field }),
+	) => ({ reqId, [tickSizeField[field]]: size }),
 
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ae851ec3a1e0fa2d0964c7779b0c89718
 	[MARKETDATA_EVENT.TICK_PRICE]: (
 		[
 			reqId,
 			field,
-			price,
-			attribs
+			price
 		]
-	) => ({ reqId, [tickPriceField[field]]: price, _origField: field, attribs }),
+	) => ({ reqId, [tickPriceField[field]]: price }),
 
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a19cb7c5bbd4ab05ccc5f9e686ed07a9e
 	[MARKETDATA_EVENT.TICK_STRING]: (
@@ -69,10 +68,15 @@ const dataMapperFunc = {
 			value
 		]
 	) => {
-		const result = { reqId, _origField: field }
+		const result = { reqId }
 
 		if (field === TICK_STRING_FIELD.NEW_FEED) {
-			const [articleId, time, providerCode, ...content] = value.split(' ')
+			const [
+				articleId,
+				time,
+				providerCode,
+				...content
+			] = value.split(' ')
 			Object.assign(result, { articleId, time, providerCode, content: content.join(' ') })
 		} else {
 			result[tickStringField[field]] = +value
@@ -80,6 +84,9 @@ const dataMapperFunc = {
 
 		return result
 	},
+
+	// ref: http://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a2d1c80705657202c82a0b8708ad0e169
+	[MARKETDATA_EVENT.TICK_SNAPSHOT_END]: reqIdMappingFunc,
 
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ac2cf5a12822959fb0ce7e9f816157ea8
 	// [MARKETDATA_EVENT.TICK_NEWS]: (

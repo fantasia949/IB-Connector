@@ -1,7 +1,16 @@
 import assert from 'assert'
 import websocket_connection_manager from '../websocket_connection_manager'
 import EventEmitter from 'events'
-import { MARKET_DATA_TYPE, EVENT, TRADE_EVENT, INTENT, NEWS_EVENT, MARKETDATA_EVENT } from './constants'
+import {
+	MARKET_DATA_TYPE,
+	EVENT,
+	TRADE_EVENT,
+	INTENT,
+	NEWS_EVENT,
+	MARKETDATA_EVENT,
+	GENERIC_TICK,
+	SERVER_LOG_LEVEL
+} from './constants'
 import { parseMessage } from './parser'
 import {
 	makeRequestSubscriptionCommand,
@@ -26,6 +35,8 @@ const attachRequestManagertoSocket = socket =>
  * @property {string} username
  * @property {string} password
  * @property {string} endpoint
+ * @property {number=} marketDatType
+ * @property {number=} serverLogLevel
  */
 
 class IbConnector extends EventEmitter {
@@ -37,13 +48,21 @@ class IbConnector extends EventEmitter {
 	constructor (config = {}) {
 		super()
 
-		const { username, password, endpoint } = config
+		const { username, password, endpoint, marketDataType, serverLogLevel } = config
 
 		assert(username && password && endpoint, 'config is invalid. { username, password, endpoint } are required')
 
 		this._config = config
 
-		this._marketDataType = undefined
+		if (marketDataType !== undefined) {
+			this.setMarketDataType(marketDataType)
+		}
+
+		this._serverLogLevel = SERVER_LOG_LEVEL.ERROR
+
+		if (serverLogLevel !== undefined) {
+			this.setServerLogLevel(serverLogLevel)
+		}
 
 		this._responseHandlers = {}
 	}
@@ -51,6 +70,11 @@ class IbConnector extends EventEmitter {
 	setMarketDataType (marketDataType) {
 		assert(Object.values(MARKET_DATA_TYPE).includes(marketDataType), 'marketDataType is invalid')
 		this._marketDataType = marketDataType
+	}
+
+	setServerLogLevel (serverLogLevel) {
+		assert(Object.values(SERVER_LOG_LEVEL).includes(serverLogLevel), 'serverLogLevel is invalid')
+		this._serverLogLevel = serverLogLevel
 	}
 
 	/**
@@ -166,12 +190,40 @@ class IbConnector extends EventEmitter {
 		return data.entries
 	}
 
+	async getMarketdataSnapshot (exSymbol, secType) {
+		const command = makeRequestSubscriptionCommand(
+			INTENT.WATCHLIST,
+			this._socket.getReqId(),
+			icFactory.watchlistConfig(exSymbol, secType, GENERIC_TICK.DEFAULT, true)
+		)
+
+		const response = await this._getData(
+			command,
+			MARKETDATA_EVENT.TICK_SNAPSHOT_END,
+			[
+				MARKETDATA_EVENT.TICK_PRICE,
+				MARKETDATA_EVENT.TICK_SIZE,
+				MARKETDATA_EVENT.TICK_STRING
+			],
+			(result, data, event) => {
+				const field = parseMessage({ data, event })
+				Object.assign(result, field.data)
+				return result
+			},
+			{}
+		)
+
+		return response.data
+	}
+
 	async getOpenOrders () {
 		const command = makeRequestSubscriptionCommand(INTENT.OPEN_ORDERS)
 		const response = await this._getData(
 			command,
 			TRADE_EVENT.ORDER_OPEN_END,
-			TRADE_EVENT.ORDER_OPEN,
+			[
+				TRADE_EVENT.ORDER_OPEN
+			],
 			(result, message) => [
 				...result,
 				parseMessage(message).data
@@ -187,7 +239,9 @@ class IbConnector extends EventEmitter {
 		const response = await this._getData(
 			command,
 			TRADE_EVENT.ORDER_COMPLETED_END,
-			TRADE_EVENT.ORDER_COMPLETED,
+			[
+				TRADE_EVENT.ORDER_COMPLETED
+			],
 			(result, message) => [
 				...result,
 				parseMessage(message).data
@@ -284,6 +338,16 @@ class IbConnector extends EventEmitter {
 						]
 					})
 				}
+
+				if (this._marketDataType !== undefined) {
+					this._sendCommand({
+						command: 'setServerLogLevel',
+						args: [
+							this._marketDataType
+						]
+					})
+				}
+
 				socket.off(EVENT.ERROR, reject)
 				resolve(this)
 			})
@@ -316,20 +380,24 @@ class IbConnector extends EventEmitter {
 		return unsubscribe(socket)
 	}
 
-	_getData (command, completeEvent, acumulateEvent, onAcumulate, initialAcumulatedData) {
+	_getData (command, completeEvent, acumulateEvents = [], onAcumulate, initialAcumulatedData) {
 		return new Promise(resolve => {
 			this._sendCommand(command)
+			let offEvents = []
 
 			let acumulatedData = initialAcumulatedData
 
-			if (acumulateEvent) {
-				this._onceMessageEvent(acumulateEvent, (data, event) => {
-					acumulatedData = onAcumulate(acumulatedData, data, event)
-				})
-			}
+			acumulateEvents.forEach(acumulateEvent => {
+				offEvents.push(
+					this._onMessageEvent(acumulateEvent, (data, event) => {
+						acumulatedData = onAcumulate(acumulatedData, data, event)
+					})
+				)
+			})
 
 			this._onceMessageEvent(completeEvent, (data, event) => {
-				resolve({ data: acumulateEvent ? acumulatedData : data, event })
+				resolve({ data: acumulateEvents.length ? acumulatedData : data, event })
+				offEvents.forEach(off => off())
 			})
 		})
 	}
@@ -412,6 +480,20 @@ class IbConnector extends EventEmitter {
 		this.emit(EVENT.COMMAND_SEND, message)
 
 		this._socket.send(JSON.stringify(message))
+	}
+	_onMessageEvent (eventName, cb) {
+		const socket = this._socket
+
+		const onMessage = message => {
+			const { event, data } = JSON.parse(message)
+			if (event === eventName) {
+				cb(data, eventName)
+			}
+		}
+
+		socket.on(EVENT.MESSAGE, onMessage)
+
+		return () => socket.off(EVENT.MESSAGE, onMessage)
 	}
 	_onceMessageEvent (eventName, cb) {
 		const socket = this._socket

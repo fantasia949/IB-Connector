@@ -6,10 +6,19 @@ export const MARKET_DATA_TYPE = {
 	DELAYED_FROZEN: 4
 }
 
+export const SERVER_LOG_LEVEL = {
+	SYSTEM: 1,
+	ERROR: 2,
+	WARNING: 3,
+	INFORMATION: 4,
+	DETAIL: 5
+}
+
 export const MARKETDATA_EVENT = {
 	TICK_SIZE: 'tickSize',
 	TICK_PRICE: 'tickPrice',
 	TICK_STRING: 'tickString',
+	TICK_SNAPSHOT_END: 'tickSnapshotEnd',
 	// TICK_NEWS: 'tickNews',
 	ORDERBOOK: 'updateMktDepth',
 	HISTORICAL_DATA: 'historicalData',
