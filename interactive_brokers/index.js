@@ -187,14 +187,50 @@ class IbConnector extends EventEmitter {
 
 		const response = await this._getData(command, NEWS_EVENT.NEWS_ARTICLE)
 		const { data } = parseMessage(response)
-		return data.entries
+		return data
+	}
+
+	async getInstrumentDetails (exSymbol, secType) {
+		const command = makeRequestSubscriptionCommand(
+			INTENT.INSTRUMENT_DETAILS,
+			this._socket.getReqId(),
+			icFactory.instrumentDetailsConfig(exSymbol, secType)
+		)
+
+		const response = await this._getData(
+			command,
+			MARKETDATA_EVENT.INSTRUMENT_DETAIL_END,
+			[
+				MARKETDATA_EVENT.INSTRUMENT_DETAIL
+			],
+			(result, data, event) => [
+				...result,
+				parseMessage({ data, event }).data
+			],
+			[]
+		)
+
+		return response.data
+	}
+
+	async getInstrumentFundamental (exSymbol, secType) {
+		const command = makeRequestSubscriptionCommand(
+			INTENT.INSTRUMENT_FUNDAMENTAL,
+			this._socket.getReqId(),
+			icFactory.instrumentFundamentalConfig(exSymbol, secType)
+		)
+
+		const response = await this._getData(command, MARKETDATA_EVENT.FUNDAMENTAL_DATA)
+
+		const { data } = parseMessage(response)
+		return data
 	}
 
 	async getMarketdataSnapshot (exSymbol, secType) {
 		const command = makeRequestSubscriptionCommand(
-			INTENT.WATCHLIST,
+			INTENT.MARKET_DATA,
 			this._socket.getReqId(),
-			icFactory.watchlistConfig(exSymbol, secType, GENERIC_TICK.DEFAULT, true)
+			icFactory.marketDataConfig(exSymbol, secType, GENERIC_TICK.DEFAULT, true)
 		)
 
 		const response = await this._getData(
@@ -339,11 +375,11 @@ class IbConnector extends EventEmitter {
 					})
 				}
 
-				if (this._marketDataType !== undefined) {
+				if (this._serverLogLevel !== SERVER_LOG_LEVEL.ERROR) {
 					this._sendCommand({
 						command: 'setServerLogLevel',
 						args: [
-							this._marketDataType
+							this._serverLogLevel
 						]
 					})
 				}

@@ -14,72 +14,64 @@ import {
 
 import * as icFactory from './interactive_brokers/intentConfig/factory'
 
-const main = async () => {
+export const initIb = () => {
 	const connectorConfig = {
-		username: 'hxvn0001',
+		username: 'hxvn0002',
 		password: 'Hydra2019',
 		serverLogLevel: SERVER_LOG_LEVEL.DETAIL,
 		// free user must set market data subscription to DELAYED in order to get market data
 		marketDataType: MARKET_DATA_TYPE.DELAYED
 	}
 
+	const ib = new IbConnector(connectorConfig)
+
+	return ib
+}
+
+const main = async () => {
 	const facebookConId = 107113386
 	const facebookSymbol = 'fb'
 
-	const ib = new IbConnector(connectorConfig)
+	const ib = initIb()
 
 	ib.on(EVENT.ERROR, (uuid, err) => console.log(uuid, err))
 	ib.on(EVENT.CLOSE, uuid => console.log(uuid, 'disconnected'))
 	// ib.on(EVENT.MESSAGE, message => console.log(uuid, message))
 	// every command sent to IB will be logged here
-	ib.on(EVENT.COMMAND_SEND, message => console.log(JSON.stringify(message)))
+	// ib.on(EVENT.COMMAND_SEND, message => console.log(JSON.stringify(message)))
 	// every data got from IB will be logged here
 	// ib.on(EVENT.DATA, (uuid, data, event) => console.log(uuid, 'global', data, event))
 
-	console.log('connecting')
-
 	await ib.connect({ uuid: 'fb' })
-
-	console.log('connected')
+	setTimeout(() => ib.disconnect(), 40 * 1000)
 
 	// testWatchlist(ib, facebookSymbol)
-	// testWatchlistSnapshot(ib, facebookSymbol)
-
 	// testOrderbook(ib, 'eur/usd', SECURITY_TYPE.FOREX)
-
-	// testInstrumentDetail(ib, facebookSymbol)
-
 	// testAccount(ib)
-
-	testRecentTrades(ib, 'eur/usd', SECURITY_TYPE.FOREX)
-
+	// testRecentTrades(ib, 'eur/usd', SECURITY_TYPE.FOREX)
 	// testHistoricData(ib, 'eur/usd', SECURITY_TYPE.FOREX)
-
 	// testPositions(ib)
+	// testHistoricalNews(ib, facebookConId, [
+	// 	'BRFG',
+	// 	'BRFUPDN',
+	// 	'DJNL'
+	// ])
+	// testRecentNews(ib, facebookSymbol, SECURITY_TYPE.STOCK, 'BRFG')
 
 	// testTrading(ib, facebookSymbol)
 	// setTimeout(() => testOpenOrders(ib), 4 * 1000)
 
 	// testPortfolio(ib)
 
+	// await testWatchlistSnapshot(ib, facebookSymbol)
 	// await testNewsProviders(ib)
-
-	// testHistoricalNews(ib, facebookConId, [
-	// 	'BRFG',
-	// 	'BRFUPDN',
-	// 	'DJNL'
-	// ])
-
 	// await testNewsArticle(ib, 'BRFG', 'BRFG$0af99099')
-
-	// testRecentNews(ib, facebookSymbol, SECURITY_TYPE.STOCK, 'BRFG')
-
+	// await testInstrumentDetail(ib, facebookSymbol)
 	// await testMatchingSymbols(ib, facebookSymbol)
+	await testInstrumentFundamental(ib, facebookSymbol)
 
-	// not work now
+	// not work
 	// await testCompletedOrders(ib)
-
-	setTimeout(() => ib.disconnect(), 40 * 1000)
 }
 
 main().catch(err => console.error(err))
@@ -88,7 +80,7 @@ const testWatchlist = (ib, exSymbol, secType) => {
 	const watchlist = { bid: '-', ask: '-', last: '-', lastTraded: '-', volume: '-', close: '-', open: '-' }
 
 	let watchlistTimeoutId = undefined
-	ib.subscribe(INTENT.WATCHLIST, icFactory.watchlistConfig(exSymbol, secType), (_, data) => {
+	ib.subscribe(INTENT.MARKET_DATA, icFactory.marketDataConfig(exSymbol, secType), (_, data) => {
 		Object.keys(watchlist).filter(field => data[field] !== undefined).forEach(field => (watchlist[field] = data[field]))
 
 		clearTimeout(watchlistTimeoutId)
@@ -131,14 +123,14 @@ const testOrderbook = (ib, exSymbol, secType) => {
 	)
 }
 
-const testInstrumentDetail = (ib, exSymbol, secType) => {
-	const info = []
-	ib.subscribe(INTENT.INSTRUMENT_DETAIL, icFactory.instrumentDetailConfig(exSymbol, secType), (_, entry, event) => {
-		if (event === MARKETDATA_EVENT.INSTRUMENT_DETAIL_END) {
-			console.log(info)
-		}
-		info.push(entry)
-	})
+const testInstrumentDetail = async (ib, exSymbol, secType) => {
+	const result = await ib.getInstrumentDetails(exSymbol, secType)
+	console.log(result)
+}
+
+const testInstrumentFundamental = async (ib, exSymbol, secType) => {
+	const result = await ib.getInstrumentFundamental(exSymbol, secType)
+	console.log(result)
 }
 
 const testAccount = async ib => {

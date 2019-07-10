@@ -1,9 +1,9 @@
 import assert from 'assert'
 import { makeContract } from '../utils'
 
-export default class WatchlistConfig {
+export default class MarketDataConfig {
 	/**
-   * Creates an instance of WatchlistConfig.
+   * Creates an instance of MarketDataConfig.
    * @param {string} exSymbol
    * @param {string} secType
    * @param {string} genericTickList - comma separated ids of the available generic ticks

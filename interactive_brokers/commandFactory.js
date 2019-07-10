@@ -7,7 +7,7 @@ import {
 	OrderbookConfig,
 	WatchlistConfig,
 	AccountSummaryConfig,
-	InstrumentDetailConfig,
+	InstrumentDetailsConfig,
 	PortfolioConfig,
 	HistoricalNewsConfig,
 	MatchingSymbolsConfig,
@@ -36,14 +36,14 @@ export const makeRequestSubscriptionCommand = (intent, reqId, config = icFactory
 		case INTENT.ORDERBOOK:
 			assertType(config, OrderbookConfig)
 			break
-		case INTENT.WATCHLIST:
+		case INTENT.MARKET_DATA:
 			assertType(config, WatchlistConfig)
 			break
 		case INTENT.ACCOUNT_SUMMARY:
 			assertType(config, AccountSummaryConfig)
 			break
-		case INTENT.INSTRUMENT_DETAIL:
-			assertType(config, InstrumentDetailConfig)
+		case INTENT.INSTRUMENT_DETAILS:
+			assertType(config, InstrumentDetailsConfig)
 			break
 		case INTENT.PORTFOLIO:
 			assertType(config, PortfolioConfig)

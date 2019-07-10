@@ -243,6 +243,14 @@ const dataMapperFunc = {
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a4e9466339bac7149c2fdb48cda0dd088
 	[MARKETDATA_EVENT.INSTRUMENT_DETAIL_END]: reqIdMappingFunc,
 
+	// ref: http://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#af209070fa9583fb4780be0f3ff1e61e4
+	[MARKETDATA_EVENT.FUNDAMENTAL_DATA]: (
+		[
+			reqId,
+			data
+		]
+	) => ({ reqId, data }),
+
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ae39d414ee5868751ffdd318c4673b63f
 	[MARKETDATA_EVENT.RECENT_TRADES]: (
 		[
@@ -318,14 +326,12 @@ const dataMapperFunc = {
 	) => ({ msgId, msgType, message, origExchange, intent: INTENT.NEWS_BULLETINS }),
 
 	// https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a95c50b5aa2d2a8ffd8592ccdeb28a6dd
-	[NEWS_EVENT.NEWS_PROVIDERS]: entries => ({
-		entries: entries.map(([ length, ...providers
-		]) =>
-			Array.from({ length }, (_, i) => [
-				providers[i * 2],
-				providers[i * 2 + 1]
-			])
-		),
+	[NEWS_EVENT.NEWS_PROVIDERS]: (
+		[
+			entries
+		]
+	) => ({
+		entries,
 		intent: INTENT.NEWS_PROVIDERS
 	}),
 

@@ -27,7 +27,8 @@ export const MARKETDATA_EVENT = {
 	INSTRUMENT_DETAIL: 'contractDetails',
 	INSTRUMENT_DETAIL_END: 'contractDetailsEnd',
 	RECENT_TRADES: 'realtimeBar',
-	SYMBOL_SAMPLES: 'symbolSamples'
+	SYMBOL_SAMPLES: 'symbolSamples',
+	FUNDAMENTAL_DATA: 'fundamentalData'
 }
 export const TRADE_EVENT = {
 	ORDER_OPEN: 'openOrder',
@@ -47,6 +48,15 @@ export const ACCOUNT_EVENT = {
 	UPDATE_ACCOUNT_VALUE: 'updateAccountValue',
 	UPDATE_PORTFOLIO: 'updatePortfolio',
 	ACCOUNT_DOWNLOAD_END: 'accountDownloadEnd'
+}
+
+export const FUNDAMENTAL_REPORT_TYPE = {
+	COMPANY_OVERVIEW: 'ReportSnapshot',
+	FINANCIAL_SUMMARY: 'ReportsFinSummary',
+	FINANCIAL_RATIOS: 'ReportRatios',
+	FINANCIAL_STATEMENTS: 'ReportsFinStatements',
+	ANALYST_ESTIMATES: 'RESC',
+	COMPANY_CALENDAR: 'CalendarReport'
 }
 
 export const NEWS_EVENT = {
@@ -69,12 +79,13 @@ export const EVENT = {
 export const INTENT = {
 	RECENT_TRADES: 'recent_trades',
 	ORDERBOOK: 'orderbook',
-	WATCHLIST: 'watchlist',
+	MARKET_DATA: 'watchlist',
 	OPEN_ORDERS: 'subscribe_open_orders',
 	COMPLETED_ORDERS: 'subscribe_completed_orders',
 	POSITIONS: 'subscribe_closed_positions',
 	ACCOUNT_SUMMARY: 'account_summary',
-	INSTRUMENT_DETAIL: 'contract_detail',
+	INSTRUMENT_DETAILS: 'contract_details',
+	INSTRUMENT_FUNDAMENTAL: 'contract_fundamental',
 	HISTORICAL_DATA: 'historical_data',
 	PORTFOLIO: 'portfolio',
 	NEWS_ARTICLE: 'news_article',
@@ -85,7 +96,7 @@ export const INTENT = {
 }
 
 export const SUBSCRIPTION_TYPE = {
-	[INTENT.WATCHLIST]: 'MktData',
+	[INTENT.MARKET_DATA]: 'MktData',
 	[INTENT.RECENT_NEWS]: 'MktData',
 	[INTENT.ORDERBOOK]: 'MktDepth',
 	[INTENT.OPEN_ORDERS]: 'OpenOrders',
@@ -94,7 +105,8 @@ export const SUBSCRIPTION_TYPE = {
 	[INTENT.HISTORICAL_DATA]: 'HistoricalData',
 	[INTENT.POSITIONS]: 'Positions',
 	[INTENT.ACCOUNT_SUMMARY]: 'AccountSummary',
-	[INTENT.INSTRUMENT_DETAIL]: 'ContractDetails',
+	[INTENT.INSTRUMENT_DETAILS]: 'ContractDetails',
+	[INTENT.INSTRUMENT_FUNDAMENTAL]: 'FundamentalData',
 	[INTENT.PORTFOLIO]: 'AccountUpdates',
 	[INTENT.NEWS_ARTICLE]: 'NewsArticle',
 	[INTENT.HISTORICAL_NEWS]: 'HistoricalNews',

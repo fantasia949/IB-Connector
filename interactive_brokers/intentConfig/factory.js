@@ -1,5 +1,5 @@
 import * as configs from './'
-import { ACCOUNT_TAG, SECURITY_TYPE, DATA_TO_SHOW, GENERIC_TICK } from '../constants'
+import { ACCOUNT_TAG, SECURITY_TYPE, DATA_TO_SHOW, GENERIC_TICK, FUNDAMENTAL_REPORT_TYPE } from '../constants'
 
 const _defaultIntentConfig = {
 	toCommandParams: (...args) => [
@@ -47,8 +47,20 @@ export const recentTradesConfig = (exSymbol, secType = SECURITY_TYPE.STOCK, what
  * @param {string} exSymbol 
  * @param {string} [secType=SECURITY_TYPE.STOCK]
  */
-export const instrumentDetailConfig = (exSymbol, secType = SECURITY_TYPE.STOCK) =>
-	new configs.InstrumentDetailConfig(exSymbol, secType)
+export const instrumentDetailsConfig = (exSymbol, secType = SECURITY_TYPE.STOCK) =>
+	new configs.InstrumentDetailsConfig(exSymbol, secType)
+
+/**
+ * Creates an instance of InstrumentFundamentalConfig.
+ * @param {string} exSymbol 
+ * @param {string} [secType=SECURITY_TYPE.STOCK]
+ * @param {FUNDAMENTAL_REPORT_TYPE} [reportType=FUNDAMENTAL_REPORT_TYPE.COMPANY_OVERVIEW]
+ */
+export const instrumentFundamentalConfig = (
+	exSymbol,
+	secType = SECURITY_TYPE.STOCK,
+	reportType = FUNDAMENTAL_REPORT_TYPE.COMPANY_OVERVIEW
+) => new configs.InstrumentFundamentalConfig(exSymbol, secType, reportType)
 
 /**
  *Creates an instance of OrderbookConfig.
@@ -60,20 +72,20 @@ export const orderbookConfig = (exSymbol, secType = SECURITY_TYPE.STOCK, numRows
 	new configs.OrderbookConfig(exSymbol, secType, numRows)
 
 /**
- * Creates an instance of WatchlistConfig.
+ * Creates an instance of MarketDataConfig.
  * @param {string} exSymbol
  * @param {string} [secType=SECURITY_TYPE.STOCK]
  * @param {string} [genericTickList=GENERIC_TICK.DEFAULT] - comma separated ids of the available generic ticks
  * @param {boolean} [snapshot=false] -  A true value will return a one-time snapshot, while a false value will provide streaming data.
  * @param {boolean} [regulatory=false] - snapshot for US stocks requests NBBO snapshots for users which have "US Securities Snapshot Bundle" subscription but not corresponding Network A, B, or C subscription necessary for streaming * market data.
  */
-export const watchlistConfig = (
+export const marketDataConfig = (
 	exSymbol,
 	secType = SECURITY_TYPE.STOCK,
 	genericTickList = GENERIC_TICK.DEFAULT,
 	snapshot = false,
 	regulatory = false
-) => new configs.WatchlistConfig(exSymbol, secType, genericTickList, snapshot, regulatory)
+) => new configs.MarketDataConfig(exSymbol, secType, genericTickList, snapshot, regulatory)
 
 /**
  * Creates an instance of PortfolioConfig.
