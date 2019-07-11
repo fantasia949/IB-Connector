@@ -19,7 +19,6 @@ export const MARKETDATA_EVENT = {
 	TICK_PRICE: 'tickPrice',
 	TICK_STRING: 'tickString',
 	TICK_SNAPSHOT_END: 'tickSnapshotEnd',
-	// TICK_NEWS: 'tickNews',
 	ORDERBOOK: 'updateMktDepth',
 	HISTORICAL_DATA: 'historicalData',
 	HISTORICAL_DATA_UPDATE: 'historicalDataUpdate',
@@ -28,7 +27,10 @@ export const MARKETDATA_EVENT = {
 	INSTRUMENT_DETAIL_END: 'contractDetailsEnd',
 	RECENT_TRADES: 'realtimeBar',
 	SYMBOL_SAMPLES: 'symbolSamples',
-	FUNDAMENTAL_DATA: 'fundamentalData'
+	FUNDAMENTAL_DATA: 'fundamentalData',
+	SCANNER_PARAMETERS: 'scannerParameters',
+	SCANNER_DATA: 'scannerData',
+	SCANNER_DATA_END: 'scannerDataEnd'
 }
 export const TRADE_EVENT = {
 	ORDER_OPEN: 'openOrder',
@@ -82,7 +84,7 @@ export const INTENT = {
 	MARKET_DATA: 'watchlist',
 	OPEN_ORDERS: 'subscribe_open_orders',
 	COMPLETED_ORDERS: 'subscribe_completed_orders',
-	POSITIONS: 'subscribe_closed_positions',
+	OPEN_POSITIONS: 'subscribe_open_positions',
 	ACCOUNT_SUMMARY: 'account_summary',
 	INSTRUMENT_DETAILS: 'contract_details',
 	INSTRUMENT_FUNDAMENTAL: 'contract_fundamental',
@@ -92,7 +94,9 @@ export const INTENT = {
 	NEWS_PROVIDERS: 'news_providers',
 	HISTORICAL_NEWS: 'historical_news',
 	RECENT_NEWS: 'recent_news',
-	MATCHING_SYMBOLS: 'matching_symbols'
+	MATCHING_SYMBOLS: 'matching_symbols',
+	SCANNER_PARAMTERS: 'scanner_parameters',
+	SCANNER_SUBSCRIPTION: 'scanner_subscription'
 }
 
 export const SUBSCRIPTION_TYPE = {
@@ -103,7 +107,7 @@ export const SUBSCRIPTION_TYPE = {
 	[INTENT.COMPLETED_ORDERS]: 'CompletedOrders',
 	[INTENT.RECENT_TRADES]: 'RealTimeBars',
 	[INTENT.HISTORICAL_DATA]: 'HistoricalData',
-	[INTENT.POSITIONS]: 'Positions',
+	[INTENT.OPEN_POSITIONS]: 'Positions',
 	[INTENT.ACCOUNT_SUMMARY]: 'AccountSummary',
 	[INTENT.INSTRUMENT_DETAILS]: 'ContractDetails',
 	[INTENT.INSTRUMENT_FUNDAMENTAL]: 'FundamentalData',
@@ -111,7 +115,9 @@ export const SUBSCRIPTION_TYPE = {
 	[INTENT.NEWS_ARTICLE]: 'NewsArticle',
 	[INTENT.HISTORICAL_NEWS]: 'HistoricalNews',
 	[INTENT.NEWS_PROVIDERS]: 'NewsProviders',
-	[INTENT.MATCHING_SYMBOLS]: 'MatchingSymbols'
+	[INTENT.MATCHING_SYMBOLS]: 'MatchingSymbols',
+	[INTENT.SCANNER_PARAMTERS]: 'ScannerParameters',
+	[INTENT.SCANNER_SUBSCRIPTION]: 'ScannerSubscription'
 }
 
 export const SECURITY_TYPE = {
@@ -252,3 +258,30 @@ export const ACCOUNT_TAG = {
 	// DayTradesRemaining: '',
 	// Leverage: ''
 }
+
+// ref: http://interactivebrokers.github.io/tws-api/classIBApi_1_1ScannerSubscription.html
+export const SCANNER_SUBSCRIPTION_FILTER = {
+	NUMBER_OF_ROWS: 'numberOfRows',
+	INSTRUMENT: 'instrument',
+	LOCATION_CODE: 'locationCode',
+	SCAN_CODE: 'scanCode',
+	ABOVE_PRICE: 'abovePrice',
+	BELOW_PRICE: 'belowPrice',
+	ABOVE_VOLUME: 'aboveVolume',
+	AVERAGE_OPTION_VOLUME_ABOVE: 'averageOptionVolumeAbove',
+	MARKET_CAP_ABOVE: 'marketCapAbove',
+	MARKET_CAP_BELOW: 'marketCapBelow',
+	MOODY_RATING_ABOVE: 'moodyRatingAbove',
+	MOODY_RATING_BELOW: 'moodyRatingBelow',
+	SP_RATING_ABOVE: 'spRatingAbove',
+	SP_RATING_BELOW: 'spRatingBelow',
+	MATURITY_DATE_ABOVE: 'maturityDateAbove',
+	MATURITY_DATE_BELOW: 'maturityDateBelow',
+	COUPON_RATE_ABOVE: 'couponRateAbove',
+	COUPON_RATE_BELOW: 'couponRateBelow',
+	EXCLUDE_CONVERTIBLE: 'excludeConvertible',
+	SCANNER_SETTING_PAIRS: 'scannerSettingPairs',
+	STOCK_TYPE_FILTER: 'stockTypeFilter'
+}
+
+export const SCANNER_SUBSCRIPTION_FILTERS = Object.values(SCANNER_SUBSCRIPTION_FILTER)

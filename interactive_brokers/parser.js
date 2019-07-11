@@ -186,11 +186,11 @@ const dataMapperFunc = {
 	[TRADE_EVENT.POSITION]: (
 		[
 			account,
-			{ symbol, exchange, currency },
+			contract,
 			pos,
 			avgCost
 		]
-	) => ({ account, symbol, exchange, currency, pos, avgCost, intent: INTENT.POSITIONS }),
+	) => ({ account, contract, pos, avgCost, intent: INTENT.OPEN_POSITIONS }),
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#acf1bebfc1b29cbeff32da7d53aec0971
 	[TRADE_EVENT.POSITION_END]: reqIdMappingFunc,
 
@@ -269,7 +269,7 @@ const dataMapperFunc = {
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a790ccbe25033df73996f36a79ce2ce5a
 	[ACCOUNT_EVENT.UPDATE_PORTFOLIO]: (
 		[
-			{ conId, symbol, exchange },
+			contract,
 			position,
 			marketPrice,
 			marketValue,
@@ -280,9 +280,7 @@ const dataMapperFunc = {
 		]
 	) => ({
 		intent: INTENT.PORTFOLIO,
-		conId,
-		symbol,
-		exchange,
+		contract,
 		position,
 		marketPrice,
 		marketValue,
@@ -315,15 +313,6 @@ const dataMapperFunc = {
 			account
 		]
 	) => ({ account, intent: INTENT.PORTFOLIO }),
-
-	[NEWS_EVENT.NEWS_BULLETIN]: (
-		[
-			msgId,
-			msgType,
-			message,
-			origExchange
-		]
-	) => ({ msgId, msgType, message, origExchange, intent: INTENT.NEWS_BULLETINS }),
 
 	// https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a95c50b5aa2d2a8ffd8592ccdeb28a6dd
 	[NEWS_EVENT.NEWS_PROVIDERS]: (
@@ -369,7 +358,23 @@ const dataMapperFunc = {
 			reqId,
 			entries
 		]
-	) => ({ reqId, entries })
+	) => ({ reqId, entries }),
+
+	// ref: http://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a973d71a29aa397fc21f51113b1a12461
+	[MARKETDATA_EVENT.SCANNER_DATA]: (
+		[
+			reqId,
+			rank,
+			contract,
+			distance,
+			benchmark,
+			projection,
+			legsStr
+		]
+	) => ({ reqId, rank, contract, distance, benchmark, projection, legsStr }),
+
+	// ref: http://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a54d829186800287ac87c77a6a38a1917
+	[MARKETDATA_EVENT.SCANNER_DATA_END]: reqIdMappingFunc
 }
 
 export const parseMessage = message => {

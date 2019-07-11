@@ -107,11 +107,6 @@ class IbConnector extends EventEmitter {
 			this._sendCommand(message)
 			this._responseHandlers[intent] = cb
 			return
-		} else if (intent === INTENT.NEWS_BULLETINS) {
-			const message = makeRequestSubscriptionCommand(intent, true, config)
-			this._sendCommand(message)
-			this._responseHandlers[intent] = cb
-			return
 		}
 
 		const reqId = this._socket.getReqId()
@@ -143,14 +138,9 @@ class IbConnector extends EventEmitter {
 			}
 
 			return
-		} else if (intent === INTENT.NEWS_BULLETINS) {
-			const message = makeCancelSubscriptionCommand(intent, reqId)
-			this._sendCommand(message)
-
-			if (this._responseHandlers[intent]) {
-				this._responseHandlers[intent] = undefined
-			}
 		}
+
+		assert(reqId, 'reqId is required to cancel this intent subscription')
 
 		const message = makeCancelSubscriptionCommand(intent, reqId)
 		this._sendCommand(message)
@@ -250,6 +240,13 @@ class IbConnector extends EventEmitter {
 		)
 
 		return response.data
+	}
+
+	async getScannerParameters () {
+		const command = makeRequestSubscriptionCommand(INTENT.SCANNER_PARAMTERS)
+		const response = await this._getData(command, MARKETDATA_EVENT.SCANNER_PARAMETERS)
+		const result = response.data[0]
+		return result
 	}
 
 	async getOpenOrders () {

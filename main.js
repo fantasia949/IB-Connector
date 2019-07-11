@@ -9,7 +9,8 @@ import {
 	ACCOUNT_EVENT,
 	MARKETDATA_EVENT,
 	NEWS_EVENT,
-	SERVER_LOG_LEVEL
+	SERVER_LOG_LEVEL,
+	SCANNER_SUBSCRIPTION_FILTER
 } from './interactive_brokers/constants'
 
 import * as icFactory from './interactive_brokers/intentConfig/factory'
@@ -57,6 +58,7 @@ const main = async () => {
 	// 	'DJNL'
 	// ])
 	// testRecentNews(ib, facebookSymbol, SECURITY_TYPE.STOCK, 'BRFG')
+	// testScannerSubscription(ib)
 
 	// testTrading(ib, facebookSymbol)
 	// setTimeout(() => testOpenOrders(ib), 4 * 1000)
@@ -68,7 +70,8 @@ const main = async () => {
 	// await testNewsArticle(ib, 'BRFG', 'BRFG$0af99099')
 	// await testInstrumentDetail(ib, facebookSymbol)
 	// await testMatchingSymbols(ib, facebookSymbol)
-	await testInstrumentFundamental(ib, facebookSymbol)
+	// await testInstrumentFundamental(ib, facebookSymbol)
+	await testScannerParameters(ib)
 
 	// not work
 	// await testCompletedOrders(ib)
@@ -161,7 +164,7 @@ const testHistoricData = (ib, exSymbol, secType, whatToShow) => {
 }
 
 const testPositions = ib => {
-	ib.subscribe(INTENT.POSITIONS, icFactory.defaultIntentConfig(), (uuid, data, event) => console.log(uuid, data, event))
+	ib.subscribe(INTENT.OPEN_POSITIONS, icFactory.defaultIntentConfig(), (uuid, data, event) => console.log(uuid, data, event))
 }
 
 const testOpenOrders = async ib => {
@@ -219,8 +222,8 @@ const testHistoricalNews = (ib, contId, providerCodes) => {
 }
 
 const testNewsArticle = async (ib, providerCode, articleId) => {
-	const entry = await ib.getNewsArticle(providerCode, articleId)
-	console.log(entry)
+	const data = await ib.getNewsArticle(providerCode, articleId)
+	console.log(data)
 }
 
 const testRecentNews = async (ib, exSymbol, secType, providerCode) => {
@@ -230,6 +233,28 @@ const testRecentNews = async (ib, exSymbol, secType, providerCode) => {
 }
 
 const testMatchingSymbols = async (ib, pattern) => {
-	const entry = await ib.getMatchingSymbols(pattern)
-	console.log(entry)
+	const data = await ib.getMatchingSymbols(pattern)
+	console.log(data)
+}
+
+const testScannerSubscription = async ib => {
+	ib.subscribe(
+		INTENT.SCANNER_SUBSCRIPTION,
+		icFactory.scannerSubscriptionConfig({
+			[SCANNER_SUBSCRIPTION_FILTER.NUMBER_OF_ROWS]: 5,
+			// the rules are got from subscriptionParameters
+			[SCANNER_SUBSCRIPTION_FILTER.SCAN_CODE]: 'TOP_PERC_GAIN',
+			[SCANNER_SUBSCRIPTION_FILTER.INSTRUMENT]: 'STK',
+			[SCANNER_SUBSCRIPTION_FILTER.LOCATION_CODE]: 'STK.NASDAQ.NMS',
+			[SCANNER_SUBSCRIPTION_FILTER.STOCK_TYPE_FILTER]: 'ALL'
+		}),
+		(uuid, data, event) => console.log(uuid, data, event)
+	)
+}
+
+// WARNING: the XML content's size is 1.4Mbs, which is too costly to parse. So the connector will not parse it in main thread
+// It's preferred to use scannerParamsJob as a weekly/monthly job to fetch and parse this data
+const testScannerParameters = async ib => {
+	const data = await ib.getScannerParameters()
+	require('fs').writeFile('./dist/params.xml', data, err => console.log(err || 'The file was saved!'))
 }

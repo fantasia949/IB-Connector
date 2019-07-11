@@ -123,6 +123,18 @@ export const newsArticleConfig = (providerCode, articleId) => new configs.NewsAr
 export const recentNewsConfig = (exSymbol, secType = SECURITY_TYPE.STOCK, providerCode) =>
 	new configs.RecentNewsConfig(exSymbol, secType, providerCode)
 
+/**
+ *
+ * Creates an instance of MatchingSymbolsConfig.
+ * @param {string} pattern
+ */
 export const matchingSymbolsConfig = pattern => new configs.MatchingSymbolsConfig(pattern)
+
+/**
+ *
+ * Creates an instance of ScannerSubscriptionConfig.
+ * @param {Object} filters
+ */
+export const scannerSubscriptionConfig = filters => new configs.ScannerSubscriptionConfig(filters)
 
 export const defaultIntentConfig = () => _defaultIntentConfig
