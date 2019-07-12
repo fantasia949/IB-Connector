@@ -102,6 +102,8 @@ class IbConnector extends EventEmitter {
 	 * @memberof IbConnector
 	 */
 	onSubscription (intent, config, cb) {
+		this._checkConnected()
+
 		if (intent === INTENT.LIVE_PORTFOLIO) {
 			const message = makeRequestSubscriptionCommand(intent, true, icFactory.portfolioConfig(this.account))
 			this._sendCommand(message)
@@ -129,6 +131,8 @@ class IbConnector extends EventEmitter {
 	 * @memberof IbConnector
 	 */
 	offSubscription (intent, reqId) {
+		this._checkConnected()
+
 		if (intent === INTENT.LIVE_PORTFOLIO) {
 			const message = makeRequestSubscriptionCommand(intent, false, icFactory.portfolioConfig(this.account))
 			this._sendCommand(message)
@@ -356,6 +360,9 @@ class IbConnector extends EventEmitter {
 			if (!uuid) {
 				reject('config is invalid. { uuid } are required')
 			}
+
+			this._checkDisconnected()
+
 			const socket = this._initConnection(config)
 
 			this._socket = socket
@@ -406,6 +413,8 @@ class IbConnector extends EventEmitter {
 	 * @memberof IbConnector
 	 */
 	disconnect () {
+		this._checkConnected()
+
 		const socket = this._socket
 		this._responseHandlers = {}
 		this._socket = undefined
@@ -413,9 +422,30 @@ class IbConnector extends EventEmitter {
 		return unsubscribe(socket)
 	}
 
+	_checkConnected () {
+		const socket = this._socket
+
+		if (!socket || socket.readyState === socket.CLOSED) {
+			throw new Error('The connection is already closed')
+		}
+	}
+
+	_checkDisconnected () {
+		const socket = this._socket
+
+		if (socket && socket.readyState === socket.OPEN) {
+			throw new Error('The connection is already opened')
+		}
+	}
+
 	_getData (command, completeEvent, acumulateEvents = [], onAcumulate, initialAcumulatedData) {
-		return new Promise(resolve => {
-			this._sendCommand(command)
+		return new Promise((resolve, reject) => {
+			try {
+				this._sendCommand(command)
+			} catch (error) {
+				reject(error)
+			}
+
 			let offEvents = []
 
 			let acumulatedData = initialAcumulatedData
@@ -508,6 +538,8 @@ class IbConnector extends EventEmitter {
 	}
 
 	_sendCommand (message) {
+		this._checkConnected()
+
 		assert(message.command, 'Command is not valid: ' + message.command)
 
 		this.emit(EVENT.COMMAND_SEND, message)
