@@ -79,39 +79,41 @@ export const EVENT = {
 }
 
 export const INTENT = {
-	RECENT_TRADES: 'recent_trades',
-	ORDERBOOK: 'orderbook',
-	MARKET_DATA: 'watchlist',
+	LIVE_TRADES: 'recent_trades',
+	LIVE_ORDERBOOK: 'orderbook',
+	LIVE_MARKET_DATA: 'watchlist',
+	LIVE_NEWS: 'recent_news',
+	LIVE_OPEN_POSITIONS: 'subscribe_open_positions',
+	LIVE_ACCOUNT_SUMMARY: 'account_summary',
+	LIVE_PORTFOLIO: 'portfolio',
+	LIVE_BAR: 'live_bar',
 	OPEN_ORDERS: 'subscribe_open_orders',
 	COMPLETED_ORDERS: 'subscribe_completed_orders',
-	OPEN_POSITIONS: 'subscribe_open_positions',
-	ACCOUNT_SUMMARY: 'account_summary',
+	HISTORICAL_BAR: 'historical_data',
 	INSTRUMENT_DETAILS: 'contract_details',
 	INSTRUMENT_FUNDAMENTAL: 'contract_fundamental',
-	HISTORICAL_DATA: 'historical_data',
-	PORTFOLIO: 'portfolio',
 	NEWS_ARTICLE: 'news_article',
 	NEWS_PROVIDERS: 'news_providers',
 	HISTORICAL_NEWS: 'historical_news',
-	RECENT_NEWS: 'recent_news',
 	MATCHING_SYMBOLS: 'matching_symbols',
 	SCANNER_PARAMTERS: 'scanner_parameters',
 	SCANNER_SUBSCRIPTION: 'scanner_subscription'
 }
 
 export const SUBSCRIPTION_TYPE = {
-	[INTENT.MARKET_DATA]: 'MktData',
-	[INTENT.RECENT_NEWS]: 'MktData',
-	[INTENT.ORDERBOOK]: 'MktDepth',
+	[INTENT.LIVE_MARKET_DATA]: 'MktData',
+	[INTENT.LIVE_NEWS]: 'MktData',
+	[INTENT.LIVE_TRADES]: 'MktData',
+	[INTENT.LIVE_ORDERBOOK]: 'MktDepth',
+	[INTENT.LIVE_BAR]: 'RealTimeBars',
+	[INTENT.LIVE_OPEN_POSITIONS]: 'Positions',
+	[INTENT.LIVE_ACCOUNT_SUMMARY]: 'AccountSummary',
+	[INTENT.LIVE_PORTFOLIO]: 'AccountUpdates',
 	[INTENT.OPEN_ORDERS]: 'OpenOrders',
 	[INTENT.COMPLETED_ORDERS]: 'CompletedOrders',
-	[INTENT.RECENT_TRADES]: 'RealTimeBars',
-	[INTENT.HISTORICAL_DATA]: 'HistoricalData',
-	[INTENT.OPEN_POSITIONS]: 'Positions',
-	[INTENT.ACCOUNT_SUMMARY]: 'AccountSummary',
+	[INTENT.HISTORICAL_BAR]: 'HistoricalData',
 	[INTENT.INSTRUMENT_DETAILS]: 'ContractDetails',
 	[INTENT.INSTRUMENT_FUNDAMENTAL]: 'FundamentalData',
-	[INTENT.PORTFOLIO]: 'AccountUpdates',
 	[INTENT.NEWS_ARTICLE]: 'NewsArticle',
 	[INTENT.HISTORICAL_NEWS]: 'HistoricalNews',
 	[INTENT.NEWS_PROVIDERS]: 'NewsProviders',
@@ -142,13 +144,14 @@ export const GENERIC_TICK = {
 	MISCELLANEOUS_STATS: 165, // Miscellaneous Stats
 	MARKET_PRICE: 221, // Mark Price (used in TWS P&L computations)
 	AUCTION_VALUES: 225, // Auction values (volume, price and imbalance)
-	RTVOLUME: 233, // RTVolume - contains the last trade price, last trade size, last trade time, total volume, VWAP, and single trade flag.
+	RT_VOLUME: 233, // RTVolume - contains the last trade price, last trade size, last trade time, total volume, VWAP, and single trade flag.
 	SHORTABLE: 236, // Shortable
 	INVENTORY: 256, // Inventory
 	Fundamental_Ratios: 258, // Fundamental Ratios
 	REALTIME_HISTORICAL_VOLATILITY: 411, // Realtime Historical Volatility
 	IBDividends: 456, // IBDividends,
 	NEWS: 292,
+	RT_TRADE_VOLUME: 375,
 	DEFAULT: ''
 }
 
@@ -194,8 +197,10 @@ export const TICK_PRICE_FIELD = {
 
 export const TICK_STRING_FIELD = {
 	LAST_TRADED_TIMESTAMP: 45,
+	RT_VOLUME: 48,
 	NEW_FEED: 62,
-	DELAYED_LAST_TRADED_TIMESTAMP: 88
+	DELAYED_LAST_TRADED_TIMESTAMP: 88,
+	RT_TRADE: 77
 }
 
 export const ORDER_TYPE = {

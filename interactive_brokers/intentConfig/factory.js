@@ -34,13 +34,22 @@ export const historicalDataConfig = (
 ) => new configs.HistoricalDataConfig(exSymbol, secType, endDateTime, durationString, barSizeSetting, whatToShow)
 
 /**
-* Creates an instance of RecentTradesConfig.
+* Creates an instance of RealtimeBarConfig.
 * @param {string} exSymbol
 * @param {string} [secType=SECURITY_TYPE.STOCK]
 * @param {string} [whatToShow=DATA_TO_SHOW.MIDPOINT]
 */
-export const recentTradesConfig = (exSymbol, secType = SECURITY_TYPE.STOCK, whatToShow = DATA_TO_SHOW.MIDPOINT) =>
-	new configs.RecentTradesConfig(exSymbol, secType, whatToShow)
+export const realtimeBarConfig = (exSymbol, secType = SECURITY_TYPE.STOCK, whatToShow = DATA_TO_SHOW.MIDPOINT) =>
+	new configs.RealtimeBarConfig(exSymbol, secType, whatToShow)
+
+
+/**
+* Creates an instance of RecentTradesConfig.
+* @param {string} exSymbol
+* @param {string} [secType=SECURITY_TYPE.STOCK]
+*/
+export const recentTradesConfig = (exSymbol, secType = SECURITY_TYPE.STOCK) =>
+	new configs.RecentTradesConfig(exSymbol, secType)
 
 /**
  * Creates an instance of InstrumentDetailConfig.

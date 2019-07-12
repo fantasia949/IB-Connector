@@ -1,8 +1,8 @@
 import assert from 'assert'
-import { makeContract } from '../utils'
 import { GENERIC_TICK } from '../constants'
+import MarketDataConfig from './MarketDataConfig'
 
-export default class RecentNewsConfig{
+export default class RecentNewsConfig extends MarketDataConfig {
 	/**
    * Creates an instance of RecentNewsConfig.
    * @param {string} exSymbol
@@ -10,21 +10,7 @@ export default class RecentNewsConfig{
    * @param {string} providerCode
    */
 	constructor (exSymbol, secType, providerCode) {
-		assert(exSymbol, 'exSymbol must be defined')
 		assert(providerCode, 'providerCode must be defined')
-
-		this.exSymbol = exSymbol
-		this.secType = secType
-		this.genericTickList = `mdoff,${GENERIC_TICK.NEWS}:${providerCode}`
-	}
-
-	toCommandParams (reqId) {
-		return [
-			reqId,
-			makeContract(this),
-			this.genericTickList,
-			false,
-			false
-		]
+		super(exSymbol, secType, `mdoff,${GENERIC_TICK.NEWS}:${providerCode}`, false, false)
 	}
 }

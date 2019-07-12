@@ -38,7 +38,11 @@ const tickPriceField = {
 	[TICK_PRICE_FIELD.CLOSE]: 'close',
 	[TICK_PRICE_FIELD.DELAYED_CLOSE]: 'close',
 	[TICK_PRICE_FIELD.OPEN]: 'open',
-	[TICK_PRICE_FIELD.DELAYED_OPEN]: 'open'
+	[TICK_PRICE_FIELD.DELAYED_OPEN]: 'open',
+	[TICK_PRICE_FIELD.HIGH]: 'high',
+	[TICK_PRICE_FIELD.DELAYED_HIGH]: 'high',
+	[TICK_PRICE_FIELD.LOW]: 'low',
+	[TICK_PRICE_FIELD.DELAYED_LOW]: 'low'
 }
 
 const dataMapperFunc = {
@@ -78,6 +82,17 @@ const dataMapperFunc = {
 				...content
 			] = value.split(' ')
 			Object.assign(result, { articleId, time, providerCode, content: content.join(' ') })
+		} else if (field === TICK_STRING_FIELD.RT_TRADE || field === TICK_STRING_FIELD.RT_VOLUME) {
+			const { price, size, timestamp, volume, vwap, singleTradeFlag } = value.split(';')
+
+			result = {
+				price: +price,
+				size: +size,
+				timestamp: +timestamp,
+				volume: +volume,
+				vwap: +vwap,
+				singleTradeFlag: singleTradeFlag === 'true'
+			}
 		} else {
 			result[tickStringField[field]] = +value
 		}
@@ -190,7 +205,7 @@ const dataMapperFunc = {
 			pos,
 			avgCost
 		]
-	) => ({ account, contract, pos, avgCost, intent: INTENT.OPEN_POSITIONS }),
+	) => ({ account, contract, pos, avgCost, intent: INTENT.LIVE_OPEN_POSITIONS }),
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#acf1bebfc1b29cbeff32da7d53aec0971
 	[TRADE_EVENT.POSITION_END]: reqIdMappingFunc,
 
@@ -279,7 +294,7 @@ const dataMapperFunc = {
 			accountName
 		]
 	) => ({
-		intent: INTENT.PORTFOLIO,
+		intent: INTENT.LIVE_PORTFOLIO,
 		contract,
 		position,
 		marketPrice,
@@ -295,7 +310,7 @@ const dataMapperFunc = {
 		[
 			timestamp
 		]
-	) => ({ intent: INTENT.PORTFOLIO, timestamp }),
+	) => ({ intent: INTENT.LIVE_PORTFOLIO, timestamp }),
 
 	// https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#ae15a34084d9f26f279abd0bdeab1b9b5
 	[ACCOUNT_EVENT.UPDATE_ACCOUNT_VALUE]: (
@@ -305,14 +320,14 @@ const dataMapperFunc = {
 			currency,
 			accountName
 		]
-	) => ({ intent: INTENT.PORTFOLIO, key, value, currency, accountName }),
+	) => ({ intent: INTENT.LIVE_PORTFOLIO, key, value, currency, accountName }),
 
 	// https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a05f35c1d896eeee696487d483110354f
 	[ACCOUNT_EVENT.ACCOUNT_DOWNLOAD_END]: (
 		[
 			account
 		]
-	) => ({ account, intent: INTENT.PORTFOLIO }),
+	) => ({ account, intent: INTENT.LIVE_PORTFOLIO }),
 
 	// https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a95c50b5aa2d2a8ffd8592ccdeb28a6dd
 	[NEWS_EVENT.NEWS_PROVIDERS]: (

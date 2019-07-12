@@ -102,7 +102,7 @@ class IbConnector extends EventEmitter {
 	 * @memberof IbConnector
 	 */
 	onSubscription (intent, config, cb) {
-		if (intent === INTENT.PORTFOLIO) {
+		if (intent === INTENT.LIVE_PORTFOLIO) {
 			const message = makeRequestSubscriptionCommand(intent, true, icFactory.portfolioConfig(this.account))
 			this._sendCommand(message)
 			this._responseHandlers[intent] = cb
@@ -129,7 +129,7 @@ class IbConnector extends EventEmitter {
 	 * @memberof IbConnector
 	 */
 	offSubscription (intent, reqId) {
-		if (intent === INTENT.PORTFOLIO) {
+		if (intent === INTENT.LIVE_PORTFOLIO) {
 			const message = makeRequestSubscriptionCommand(intent, false, icFactory.portfolioConfig(this.account))
 			this._sendCommand(message)
 
@@ -218,7 +218,7 @@ class IbConnector extends EventEmitter {
 
 	async getMarketdataSnapshot (exSymbol, secType) {
 		const command = makeRequestSubscriptionCommand(
-			INTENT.MARKET_DATA,
+			INTENT.LIVE_MARKET_DATA,
 			this._socket.getReqId(),
 			icFactory.marketDataConfig(exSymbol, secType, GENERIC_TICK.DEFAULT, true)
 		)

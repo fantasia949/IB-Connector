@@ -44,12 +44,13 @@ const main = async () => {
 	// ib.on(EVENT.DATA, (uuid, data, event) => console.log(uuid, 'global', data, event))
 
 	await ib.connect({ uuid: 'fb' })
-	setTimeout(() => ib.disconnect(), 40 * 1000)
+	// setTimeout(() => ib.disconnect(), 40 * 1000)
 
 	// testWatchlist(ib, facebookSymbol)
 	// testOrderbook(ib, 'eur/usd', SECURITY_TYPE.FOREX)
 	// testAccount(ib)
-	// testRecentTrades(ib, 'eur/usd', SECURITY_TYPE.FOREX)
+	// testRealtimeBars(ib, 'eur/usd', SECURITY_TYPE.FOREX)
+	testRecentTrades(ib, facebookSymbol)
 	// testHistoricData(ib, 'eur/usd', SECURITY_TYPE.FOREX)
 	// testPositions(ib)
 	// testHistoricalNews(ib, facebookConId, [
@@ -71,7 +72,7 @@ const main = async () => {
 	// await testInstrumentDetail(ib, facebookSymbol)
 	// await testMatchingSymbols(ib, facebookSymbol)
 	// await testInstrumentFundamental(ib, facebookSymbol)
-	await testScannerParameters(ib)
+	// await testScannerParameters(ib)
 
 	// not work
 	// await testCompletedOrders(ib)
@@ -83,7 +84,7 @@ const testWatchlist = (ib, exSymbol, secType) => {
 	const watchlist = { bid: '-', ask: '-', last: '-', lastTraded: '-', volume: '-', close: '-', open: '-' }
 
 	let watchlistTimeoutId = undefined
-	ib.subscribe(INTENT.MARKET_DATA, icFactory.marketDataConfig(exSymbol, secType), (_, data) => {
+	ib.subscribe(INTENT.LIVE_MARKET_DATA, icFactory.marketDataConfig(exSymbol, secType), (_, data) => {
 		Object.keys(watchlist).filter(field => data[field] !== undefined).forEach(field => (watchlist[field] = data[field]))
 
 		clearTimeout(watchlistTimeoutId)
@@ -105,7 +106,7 @@ const testOrderbook = (ib, exSymbol, secType) => {
 	let orderbookTimeoutId = undefined
 
 	ib.subscribe(
-		INTENT.ORDERBOOK,
+		INTENT.LIVE_ORDERBOOK,
 		icFactory.orderbookConfig(exSymbol, secType, 2),
 		(_, { position, operation, side, price, size }) => {
 			switch (operation) {
@@ -139,32 +140,38 @@ const testInstrumentFundamental = async (ib, exSymbol, secType) => {
 const testAccount = async ib => {
 	const account = {}
 	const accountReqId = await ib.subscribe(
-		INTENT.ACCOUNT_SUMMARY,
+		INTENT.LIVE_ACCOUNT_SUMMARY,
 		icFactory.accountSummaryConfig(),
 		(_, { tag, value }, event) => {
 			if (event === ACCOUNT_EVENT.ACCOUNT_SUMMARY_END) {
 				console.log(account)
-				ib.unsubscribe(INTENT.ACCOUNT_SUMMARY, accountReqId)
+				ib.unsubscribe(INTENT.LIVE_ACCOUNT_SUMMARY, accountReqId)
 			}
 			account[tag] = value
 		}
 	)
 }
 
-const testRecentTrades = (ib, exSymbol, secType, whatToShow) => {
-	ib.subscribe(INTENT.RECENT_TRADES, icFactory.recentTradesConfig(exSymbol, secType, whatToShow), (uuid, data, event) =>
+const testRealtimeBars = (ib, exSymbol, secType, whatToShow) => {
+	ib.subscribe(INTENT.LIVE_BAR, icFactory.realtimeBarConfig(exSymbol, secType, whatToShow), (uuid, data, event) =>
+		console.log(uuid, data, event)
+	)
+}
+
+const testRecentTrades = (ib, exSymbol, secType) => {
+	ib.subscribe(INTENT.LIVE_TRADES, icFactory.recentTradesConfig(exSymbol, secType), (uuid, data, event) =>
 		console.log(uuid, data, event)
 	)
 }
 
 const testHistoricData = (ib, exSymbol, secType, whatToShow) => {
-	ib.subscribe(INTENT.HISTORICAL_DATA, icFactory.historicalDataConfig(exSymbol, secType, whatToShow), (uuid, data, event) =>
+	ib.subscribe(INTENT.HISTORICAL_BAR, icFactory.historicalDataConfig(exSymbol, secType, whatToShow), (uuid, data, event) =>
 		console.log(uuid, exSymbol, data, event)
 	)
 }
 
 const testPositions = ib => {
-	ib.subscribe(INTENT.OPEN_POSITIONS, icFactory.defaultIntentConfig(), (uuid, data, event) => console.log(uuid, data, event))
+	ib.subscribe(INTENT.LIVE_OPEN_POSITIONS, icFactory.defaultIntentConfig(), (uuid, data, event) => console.log(uuid, data, event))
 }
 
 const testOpenOrders = async ib => {
@@ -184,10 +191,10 @@ const testTrading = async (ib, facebookSymbol) => {
 
 const testPortfolio = ib => {
 	const account = {}
-	ib.subscribe(INTENT.PORTFOLIO, icFactory.defaultIntentConfig(), (uuid, data, event) => {
+	ib.subscribe(INTENT.LIVE_PORTFOLIO, icFactory.defaultIntentConfig(), (uuid, data, event) => {
 		if (event === ACCOUNT_EVENT.ACCOUNT_DOWNLOAD_END) {
 			console.log(uuid, account)
-			ib.unsubscribe(INTENT.PORTFOLIO)
+			ib.unsubscribe(INTENT.LIVE_PORTFOLIO)
 		}
 		if (event === ACCOUNT_EVENT.UPDATE_ACCOUNT_VALUE) {
 			const { key, value } = data
@@ -227,7 +234,7 @@ const testNewsArticle = async (ib, providerCode, articleId) => {
 }
 
 const testRecentNews = async (ib, exSymbol, secType, providerCode) => {
-	ib.subscribe(INTENT.RECENT_NEWS, icFactory.recentNewsConfig(exSymbol, secType, providerCode), (uuid, data, event) =>
+	ib.subscribe(INTENT.LIVE_NEWS, icFactory.recentNewsConfig(exSymbol, secType, providerCode), (uuid, data, event) =>
 		console.log(uuid, exSymbol, data, event)
 	)
 }

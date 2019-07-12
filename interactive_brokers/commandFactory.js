@@ -27,25 +27,25 @@ export const makeRequestSubscriptionCommand = (intent, reqId, config = icFactory
 	const command = 'req' + subscriptionType
 
 	switch (intent) {
-		case INTENT.RECENT_TRADES:
+		case INTENT.LIVE_TRADES:
 			assertType(config, RecentTradesConfig)
 			break
-		case INTENT.HISTORICAL_DATA:
+		case INTENT.HISTORICAL_BAR:
 			assertType(config, HistoricalDataConfig)
 			break
-		case INTENT.ORDERBOOK:
+		case INTENT.LIVE_ORDERBOOK:
 			assertType(config, OrderbookConfig)
 			break
-		case INTENT.MARKET_DATA:
+		case INTENT.LIVE_MARKET_DATA:
 			assertType(config, WatchlistConfig)
 			break
-		case INTENT.ACCOUNT_SUMMARY:
+		case INTENT.LIVE_ACCOUNT_SUMMARY:
 			assertType(config, AccountSummaryConfig)
 			break
 		case INTENT.INSTRUMENT_DETAILS:
 			assertType(config, InstrumentDetailsConfig)
 			break
-		case INTENT.PORTFOLIO:
+		case INTENT.LIVE_PORTFOLIO:
 			assertType(config, PortfolioConfig)
 			break
 		case INTENT.HISTORICAL_NEWS:
@@ -54,7 +54,7 @@ export const makeRequestSubscriptionCommand = (intent, reqId, config = icFactory
 		case INTENT.NEWS_ARTICLE:
 			assertType(config, NewsArticleConfig)
 			break
-		case INTENT.RECENT_NEWS:
+		case INTENT.LIVE_NEWS:
 			assertType(config, RecentNewsConfig)
 			break
 		case INTENT.MATCHING_SYMBOLS:

@@ -1,27 +1,23 @@
-import assert from 'assert'
-import { makeContract } from '../utils'
-export default class RecentTradesConfig {
+import { GENERIC_TICK } from '../constants'
+import MarketDataConfig from './MarketDataConfig'
+
+export default class RecentTradesConfig extends MarketDataConfig {
 	/**
  *Creates an instance of RecentTradesConfig.
  * @param {string} exSymbol
  * @param {string} secType
-	 @param {string} whatToShow
  */
-	constructor (exSymbol, secType, whatToShow) {
-		assert(exSymbol, 'exSymbol must be defined')
-		this.exSymbol = exSymbol
-		this.secType = secType
-		this.barSize = 5
-		this.whatToShow = whatToShow
-		this.useRTH = true
-	}
-	toCommandParams (reqId) {
-		return [
-			reqId,
-			makeContract(this),
-			this.barSize,
-			this.whatToShow,
-			this.useRTH
-		]
+	constructor (exSymbol, secType) {
+		super(
+			exSymbol,
+			secType,
+			[
+				'mdoff',
+				GENERIC_TICK.RT_VOLUME,
+				GENERIC_TICK.RT_TRADE_VOLUME
+			].join(','),
+			false,
+			false
+		)
 	}
 }
