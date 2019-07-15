@@ -4,54 +4,23 @@ import assert from 'assert'
 export const makeOrder = (orderType, action, quantity, config = {}) => {
 	const { price, transmitOrder, goodAfterTime, goodTillDate, parentId, tif, limitPrice, stopPrice, auxPrice } = config
 
-	let args = [
-		action,
-		quantity
-	]
+	let args = [ action, quantity ]
 
 	switch (orderType) {
 		case ORDER_TYPE.LIMIT:
-			args = [
-				...args,
-				price,
-				transmitOrder
-			]
+			args = [ ...args, price, transmitOrder ]
 			break
 		case ORDER_TYPE.MARKET:
-			args = [
-				...args,
-				transmitOrder,
-				goodAfterTime,
-				goodTillDate
-			]
+			args = [ ...args, transmitOrder, goodAfterTime, goodTillDate ]
 			break
 		case ORDER_TYPE.STOP:
-			args = [
-				...args,
-				price,
-				transmitOrder,
-				parentId,
-				tif
-			]
+			args = [ ...args, price, transmitOrder, parentId, tif ]
 			break
 		case ORDER_TYPE.STOP_LIMIT:
-			args = [
-				...args,
-				limitPrice,
-				stopPrice,
-				transmitOrder,
-				parentId,
-				tif
-			]
+			args = [ ...args, limitPrice, stopPrice, transmitOrder, parentId, tif ]
 			break
 		case ORDER_TYPE.TRAILING_STOP:
-			args = [
-				...args,
-				auxPrice,
-				tif,
-				transmitOrder,
-				parentId
-			]
+			args = [ ...args, auxPrice, tif, transmitOrder, parentId ]
 			break
 		case ORDER_TYPE.MARKET_CLOSE:
 			break
@@ -66,28 +35,24 @@ export const makeOrder = (orderType, action, quantity, config = {}) => {
 	}
 }
 
-export const makeContract = ({ secType = SECURITY_TYPE.STOCK, exSymbol, currency }) => {
+export const makeContract = ({ secType = SECURITY_TYPE.STOCK, exSymbol, multiplier, expiry, strike, right }) => {
 	let args = []
+
+	assert(exSymbol, 'exSymbol must be defined')
+
+	const [ _exsymbol, currency ] = exSymbol.split('/')
+	let [ exchange, symbol ] = _exsymbol.split(':')
 
 	switch (secType) {
 		case SECURITY_TYPE.STOCK:
 		case SECURITY_TYPE.CFD:
-			// symbol, exchange=SMART, currency=USD
-			let [
-				exchange,
-				symbol
-			] = exSymbol.split(':')
+			// symbol, exchange=SMART, currency-USD
 
 			if (symbol === undefined) {
 				symbol = exchange
-				args = [
-					symbol
-				]
+				args = [ symbol ]
 			} else {
-				args = [
-					symbol,
-					exchange
-				]
+				args = [ symbol, exchange ]
 			}
 
 			if (currency) {
@@ -96,31 +61,40 @@ export const makeContract = ({ secType = SECURITY_TYPE.STOCK, exSymbol, currency
 			break
 		case SECURITY_TYPE.FOREX:
 			// symbol, currency
-			const symbolCurrency = exSymbol.split('/')
+			assert(currency, 'forex instrument must have this format: symbol/currency')
 
-			assert.equal(symbolCurrency.length, 2, 'forex instrument must have this format: symbol/currency')
-
-			args = [
-				...symbolCurrency
-			]
+			args = [ _exsymbol, currency ]
 			break
 		case SECURITY_TYPE.COMBO:
 			// symbol, currency=USD, exchange=SMART
-			args = [
-				...exSymbol.split('/')
-			]
+			args = [ symbol, currency, exchange ]
 			break
 		case SECURITY_TYPE.IND:
-		// symbol, currency='USD', exchange=CBOE
-		case SECURITY_TYPE.FUTURE:
-		// symbol, expiry, currency=USD, exchange=ONE, multiplier
-		case SECURITY_TYPE.OPTION:
-		// symbol, expiry, strike, right, exchange=SMART, currency=USD
-		case SECURITY_TYPE.FOP:
-		// symbol, expiry, strike, right, multiplier=50, exchange=GLOBEX, currency=USD
-		default:
-			//TODO: implement args for those securities
+			// symbol, currency='USD', exchange=CBOE
+			args = [ symbol, currency, exchange ]
 			break
+		case SECURITY_TYPE.FUTURE:
+			// symbol, expiry, currency=USD, exchange=ONE, multiplier
+			assert(expiry, 'expiry must be defined')
+			assert(multiplier, 'multiplier must be defined')
+			args = [ symbol, expiry, currency, exchange, multiplier ]
+			break
+		case SECURITY_TYPE.OPTION:
+			// symbol, expiry, strike, right, exchange=SMART, currency=USD
+			assert(expiry, 'expiry must be defined')
+			assert(right, 'right must be defined')
+			assert(strike, 'strike must be defined')
+			args = [ symbol, expiry, strike, right, exchange, currency ]
+			break
+		case SECURITY_TYPE.FOP:
+			// symbol, expiry, strike, right, multiplier=50, exchange=GLOBEX, currency=USD
+			assert(expiry, 'expiry must be defined')
+			assert(right, 'right must be defined')
+			assert(strike, 'strike must be defined')
+			args = [ symbol, expiry, strike, right, multiplier, exchange, currency ]
+			break
+		default:
+			throw new Error('Security type is invalid: ' + secType)
 	}
 
 	return {
@@ -130,8 +104,4 @@ export const makeContract = ({ secType = SECURITY_TYPE.STOCK, exSymbol, currency
 	}
 }
 
-export const reqIdMappingFunc = (
-	[
-		reqId
-	]
-) => ({ reqId })
+export const reqIdMappingFunc = ([ reqId ]) => ({ reqId })

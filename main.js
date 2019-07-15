@@ -17,8 +17,8 @@ import * as icFactory from './interactive_brokers/intentConfig/factory'
 
 export const initIb = () => {
 	const connectorConfig = {
-		username: 'hxvn0002',
-		password: 'Hydra2019',
+		username: 'manta888',
+		password: 'Hydra2018',
 		serverLogLevel: SERVER_LOG_LEVEL.DETAIL,
 		// free user must set market data subscription to DELAYED in order to get market data
 		marketDataType: MARKET_DATA_TYPE.DELAYED
@@ -39,7 +39,7 @@ const main = async () => {
 	ib.on(EVENT.CLOSE, uuid => console.log(uuid, 'disconnected'))
 	// ib.on(EVENT.MESSAGE, message => console.log(uuid, message))
 	// every command sent to IB will be logged here
-	// ib.on(EVENT.COMMAND_SEND, message => console.log(JSON.stringify(message)))
+	ib.on(EVENT.COMMAND_SEND, message => console.log(JSON.stringify(message)))
 	// every data got from IB will be logged here
 	// ib.on(EVENT.DATA, (uuid, data, event) => console.log(uuid, 'global', data, event))
 
@@ -50,7 +50,7 @@ const main = async () => {
 	// testOrderbook(ib, 'eur/usd', SECURITY_TYPE.FOREX)
 	// testAccount(ib)
 	// testRealtimeBars(ib, 'eur/usd', SECURITY_TYPE.FOREX)
-	testRecentTrades(ib, facebookSymbol)
+	testRecentTrades(ib, 'SEHKSZSE:000725/CNH') // Asian market
 	// testHistoricData(ib, 'eur/usd', SECURITY_TYPE.FOREX)
 	// testPositions(ib)
 	// testHistoricalNews(ib, facebookConId, [
@@ -58,7 +58,7 @@ const main = async () => {
 	// 	'BRFUPDN',
 	// 	'DJNL'
 	// ])
-	// testRecentNews(ib, facebookSymbol, SECURITY_TYPE.STOCK, 'BRFG')
+	// testRecentNews(ib, facebookSymbol, SECURITY_TYPE.STOCK, undefined, 'BRFG')
 	// testScannerSubscription(ib)
 
 	// testTrading(ib, facebookSymbol)
