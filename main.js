@@ -58,7 +58,7 @@ const main = async () => {
 	// 	'BRFUPDN',
 	// 	'DJNL'
 	// ])
-	// testRecentNews(ib, facebookSymbol, SECURITY_TYPE.STOCK, undefined, 'BRFG')
+	// testRecentNews(ib, facebookSymbol, SECURITY_TYPE.STOCK, 'BRFG')
 	// testScannerSubscription(ib)
 
 	// testTrading(ib, facebookSymbol)
@@ -233,8 +233,8 @@ const testNewsArticle = async (ib, providerCode, articleId) => {
 	console.log(data)
 }
 
-const testRecentNews = async (ib, exSymbol, secType, providerCode) => {
-	ib.subscribe(INTENT.LIVE_NEWS, icFactory.recentNewsConfig(exSymbol, secType, providerCode), (uuid, data, event) =>
+const testRecentNews = async (ib, exSymbol, providerCode) => {
+	ib.subscribe(INTENT.LIVE_NEWS, icFactory.recentNewsConfig(exSymbol, providerCode), (uuid, data, event) =>
 		console.log(uuid, exSymbol, data, event)
 	)
 }

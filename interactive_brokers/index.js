@@ -194,13 +194,8 @@ class IbConnector extends EventEmitter {
 		const response = await this._getData(
 			command,
 			MARKETDATA_EVENT.INSTRUMENT_DETAIL_END,
-			[
-				MARKETDATA_EVENT.INSTRUMENT_DETAIL
-			],
-			(result, data, event) => [
-				...result,
-				parseMessage({ data, event }).data
-			],
+			[ MARKETDATA_EVENT.INSTRUMENT_DETAIL ],
+			(result, data, event) => [ ...result, parseMessage({ data, event }).data ],
 			[]
 		)
 
@@ -230,11 +225,7 @@ class IbConnector extends EventEmitter {
 		const response = await this._getData(
 			command,
 			MARKETDATA_EVENT.TICK_SNAPSHOT_END,
-			[
-				MARKETDATA_EVENT.TICK_PRICE,
-				MARKETDATA_EVENT.TICK_SIZE,
-				MARKETDATA_EVENT.TICK_STRING
-			],
+			[ MARKETDATA_EVENT.TICK_PRICE, MARKETDATA_EVENT.TICK_SIZE, MARKETDATA_EVENT.TICK_STRING ],
 			(result, data, event) => {
 				const field = parseMessage({ data, event })
 				Object.assign(result, field.data)
@@ -258,13 +249,8 @@ class IbConnector extends EventEmitter {
 		const response = await this._getData(
 			command,
 			TRADE_EVENT.ORDER_OPEN_END,
-			[
-				TRADE_EVENT.ORDER_OPEN
-			],
-			(result, message) => [
-				...result,
-				parseMessage(message).data
-			],
+			[ TRADE_EVENT.ORDER_OPEN ],
+			(result, message) => [ ...result, parseMessage(message).data ],
 			[]
 		)
 
@@ -276,13 +262,8 @@ class IbConnector extends EventEmitter {
 		const response = await this._getData(
 			command,
 			TRADE_EVENT.ORDER_COMPLETED_END,
-			[
-				TRADE_EVENT.ORDER_COMPLETED
-			],
-			(result, message) => [
-				...result,
-				parseMessage(message).data
-			],
+			[ TRADE_EVENT.ORDER_COMPLETED ],
+			(result, message) => [ ...result, parseMessage(message).data ],
 			[]
 		)
 
@@ -316,15 +297,11 @@ class IbConnector extends EventEmitter {
 	async placeOrder (exSymbol, orderType, quantity, orderConfig) {
 		const getOrderICommand = {
 			command: 'reqIds',
-			args: [
-				1
-			]
+			args: [ 1 ]
 		}
 
 		const { data } = await this._getData(getOrderICommand, TRADE_EVENT.NEXT_ORDER_ID)
-		const [
-			orderId
-		] = data
+		const [ orderId ] = data
 
 		const message = makePlaceOrderCommand(orderId, orderType, exSymbol, quantity, orderConfig)
 		this._sendCommand(message)
@@ -373,18 +350,14 @@ class IbConnector extends EventEmitter {
 				if (this._marketDataType !== undefined) {
 					this._sendCommand({
 						command: 'reqMarketDataType',
-						args: [
-							this._marketDataType
-						]
+						args: [ this._marketDataType ]
 					})
 				}
 
 				if (this._serverLogLevel !== SERVER_LOG_LEVEL.ERROR) {
 					this._sendCommand({
 						command: 'setServerLogLevel',
-						args: [
-							this._serverLogLevel
-						]
+						args: [ this._serverLogLevel ]
 					})
 				}
 
@@ -396,11 +369,7 @@ class IbConnector extends EventEmitter {
 
 			socket.on(EVENT.MESSAGE, message => this._onMessage(message, config))
 
-			const forwardedEvents = [
-				EVENT.OPEN,
-				EVENT.CLOSE,
-				EVENT.ERROR
-			]
+			const forwardedEvents = [ EVENT.OPEN, EVENT.CLOSE, EVENT.ERROR ]
 
 			forwardedEvents.forEach(event => socket.on(event, (...args) => this.emit(uuid, event, ...args)))
 		})
@@ -514,23 +483,11 @@ class IbConnector extends EventEmitter {
 	_initConnection (config) {
 		const { username, password } = this._config
 
-		const query = new URLSearchParams([
-			[
-				'username',
-				username
-			],
-			[
-				'password',
-				password
-			]
-		])
+		const query = new URLSearchParams([ [ 'username', username ], [ 'password', password ] ])
 
 		const url = `${this._getStream(config)}?${query}`
 
-		const socket = subscribe(config.uuid, [
-			url,
-			{}
-		])
+		const socket = subscribe(config.uuid, [ url, {} ])
 
 		attachRequestManagertoSocket(socket)
 
