@@ -94,7 +94,7 @@ class IbConnector extends EventEmitter {
 	 * @returns {number} request ID
 	 * @memberof IbConnector
 	 */
-	onSubscription (intent, config, cb) {
+	subscribe (intent, config, cb) {
 		this._checkConnected()
 
 		if (intent === INTENT.LIVE_PORTFOLIO) {
@@ -123,7 +123,7 @@ class IbConnector extends EventEmitter {
 	 * @param {number} reqId
 	 * @memberof IbConnector
 	 */
-	offSubscription (intent, reqId) {
+	unsubscribe (intent, reqId) {
 		this._checkConnected()
 
 		if (intent === INTENT.LIVE_PORTFOLIO) {
@@ -539,14 +539,7 @@ class IbConnector extends EventEmitter {
 
 export default class SimpleIbConnector extends IbConnector {
 	constructor (config) {
-		config.endpoint = 'ws://127.0.0.1:3000'
+		config.endpoint = config.endpoint || 'ws://127.0.0.1:3000'
 		super(config)
-	}
-	subscribe (intent, config, cb) {
-		return super.onSubscription(intent, config, cb)
-	}
-
-	unsubscribe (intent, reqId) {
-		return super.offSubscription(intent, reqId)
 	}
 }
