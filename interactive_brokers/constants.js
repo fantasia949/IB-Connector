@@ -122,15 +122,40 @@ export const SUBSCRIPTION_TYPE = {
 	[INTENT.SCANNER_SUBSCRIPTION]: 'ScannerSubscription'
 }
 
+export const CURRENCIES = [
+	'KRW',
+	'EUR',
+	'GBP',
+	'AUD',
+	'USD',
+	'TRY',
+	'ZAR',
+	'CAD',
+	'CHF',
+	'MXN',
+	'HKD',
+	'JPY',
+	'INR',
+	'NOK',
+	'SEK',
+	'RUB'
+]
+
 export const SECURITY_TYPE = {
-	COMBO: 'combo',
-	FOREX: 'forex',
-	FUTURE: 'future',
-	STOCK: 'stock',
-	OPTION: 'option',
-	IND: 'ind',
-	CFD: 'cfd',
-	FOP: 'fop'
+	FOREX: 'cash',
+	FUTURE: 'fut',
+	STOCK: 'stk',
+	OPTION: 'opt',
+	INDEX: 'ind',
+	FOP: 'fop',
+	COMMODITY: 'cmdty'
+}
+
+export const SECURITY_TYPES = Object.values(SECURITY_TYPE)
+
+export const RIGHT_TYPE = {
+	PUT: 'P',
+	CALL: 'C'
 }
 
 // ref: https://interactivebrokers.github.io/tws-api/classIBApi_1_1EClient.html#a7a19258a3a2087c07c1c57b93f659b63

@@ -4,13 +4,11 @@ export default class RealtimeBarConfig {
 	/**
  *Creates an instance of RealtimeBarConfig.
  * @param {string} exSymbol
- * @param {string} secType
 	 @param {string} whatToShow
  */
-	constructor (exSymbol, secType, whatToShow) {
-		assert(exSymbol, 'exSymbol must be defined')
+	constructor (exSymbol, whatToShow) {
+		assert(exSymbol, 'exSymbol is required')
 		this.exSymbol = exSymbol
-		this.secType = secType
 		this.barSize = 5
 		this.whatToShow = whatToShow
 		this.useRTH = true
@@ -18,7 +16,7 @@ export default class RealtimeBarConfig {
 	toCommandParams (reqId) {
 		return [
 			reqId,
-			makeContract(this),
+			makeContract(this.exSymbol),
 			this.barSize,
 			this.whatToShow,
 			this.useRTH

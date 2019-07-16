@@ -6,11 +6,10 @@ export default class RecentNewsConfig extends MarketDataConfig {
 	/**
    * Creates an instance of RecentNewsConfig.
    * @param {string} exSymbol
-   * @param {string} secType
    * @param {string} providerCode
    */
-	constructor (exSymbol, secType, providerCode) {
-		assert(providerCode, 'providerCode must be defined')
-		super(exSymbol, secType, `mdoff,${GENERIC_TICK.NEWS}:${providerCode}`, false, false)
+	constructor (exSymbol, providerCode) {
+		assert(providerCode, 'providerCode is required')
+		super(exSymbol, `mdoff,${GENERIC_TICK.NEWS}:${providerCode}`, false, false)
 	}
 }

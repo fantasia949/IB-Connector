@@ -1,4 +1,4 @@
-import { INTENT, SUBSCRIPTION_TYPE, SECURITY_TYPE, ORDER_ACTION } from './constants'
+import { INTENT, SUBSCRIPTION_TYPE, ORDER_ACTION } from './constants'
 import { makeContract, makeOrder } from './utils'
 import assert from 'assert'
 import {
@@ -73,9 +73,7 @@ export const makeCancelSubscriptionCommand = (intent, reqId) => {
 	assert(subscriptionType, 'This intent is not supported: ' + intent)
 
 	const command = 'cancel' + subscriptionType
-	const args = [
-		reqId
-	]
+	const args = [ reqId ]
 
 	return { command, args }
 }
@@ -83,21 +81,14 @@ export const makeCancelSubscriptionCommand = (intent, reqId) => {
 export const makePlaceOrderCommand = (orderId, orderType, exSymbol, quantity, config) => {
 	const command = 'placeOrder'
 
-	const { secType = SECURITY_TYPE.STOCK } = config
-	const args = [
-		orderId,
-		makeContract({ secType, exSymbol }),
-		makeOrder(orderType, ORDER_ACTION.BUY, quantity, config)
-	]
+	const args = [ orderId, makeContract(exSymbol), makeOrder(orderType, ORDER_ACTION.BUY, quantity, config) ]
 
 	return { command, args }
 }
 
 export const makeCancelOrderCommand = orderId => {
 	const command = 'cancelOrder'
-	const args = [
-		orderId
-	]
+	const args = [ orderId ]
 
 	return { command, args }
 }

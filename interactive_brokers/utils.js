@@ -1,5 +1,49 @@
-import { SECURITY_TYPE, ORDER_TYPE } from './constants'
+import { SECURITY_TYPE, ORDER_TYPE, SECURITY_TYPES, CURRENCIES } from './constants'
 import assert from 'assert'
+
+class BaseExchange {
+	constructor (exSymbol, secType) {
+		this.exSymbol = exSymbol
+		this.secType = secType
+	}
+}
+
+class FutureExchange extends BaseExchange {
+	constructor (exSymbol, expiry, multiplier) {
+		super(exSymbol, SECURITY_TYPE.FUTURE)
+		this.expiry = expiry
+		this.multiplier = multiplier
+	}
+}
+
+class OptionExchange extends BaseExchange {
+	constructor (exSymbol, right, expiry, strike) {
+		super(exSymbol, SECURITY_TYPE.OPTION)
+		this.right = right
+		this.expiry = expiry
+		this.strike = strike
+	}
+}
+
+class FutureOptionExchange extends BaseExchange {
+	constructor (exSymbol, right, expiry, strike) {
+		super(exSymbol, SECURITY_TYPE.FOP)
+		this.expiry = expiry
+		this.strike = strike
+		this.right = right
+	}
+}
+
+export const exchangeUtils = {
+	isExchangeObject: object => object instanceof BaseExchange,
+	commodity: exSymbol => new BaseExchange(exSymbol, SECURITY_TYPE.COMMODITY),
+	stock: exSymbol => new BaseExchange(exSymbol, SECURITY_TYPE.STOCK),
+	forex: exSymbol => new BaseExchange(exSymbol, SECURITY_TYPE.FOREX),
+	index: exSymbol => new BaseExchange(exSymbol, SECURITY_TYPE.INDEX),
+	future: (exSymbol, expiry, multiplier) => new FutureExchange(exSymbol, expiry, multiplier),
+	option: (exSymbol, right, expiry, strike) => new OptionExchange(exSymbol, right, expiry, strike),
+	futureOption: (exSymbol, right, expiry, strike) => new FutureOptionExchange(exSymbol, right, expiry, strike)
+}
 
 export const makeOrder = (orderType, action, quantity, config = {}) => {
 	const { price, transmitOrder, goodAfterTime, goodTillDate, parentId, tif, limitPrice, stopPrice, auxPrice } = config
@@ -35,73 +79,100 @@ export const makeOrder = (orderType, action, quantity, config = {}) => {
 	}
 }
 
-export const makeContract = ({ secType = SECURITY_TYPE.STOCK, exSymbol, multiplier, expiry, strike, right }) => {
-	let args = []
+export const makeContract = input => {
+	const DEFAULT_CURRENCY = 'USD'
+	const DEFAULT_EXCHANGE = 'SMART'
 
-	assert(exSymbol, 'exSymbol must be defined')
+	if (input.type && input.subtype) {
+		return input
+	}
 
-	const [ _exsymbol, currency ] = exSymbol.split('/')
-	let [ exchange, symbol ] = _exsymbol.split(':')
+	let { exSymbol, secType, multiplier, expiry, strike, right } = exchangeUtils.isExchangeObject(input)
+		? input
+		: { exSymbol: input }
+
+	assert(exSymbol, 'exSymbol is required')
+
+	let exludedSecType = undefined
+
+	if (secType) {
+		exludedSecType = exSymbol
+	} else {
+		;[ secType, exludedSecType ] = exSymbol.split('@')
+
+		if (exludedSecType === undefined) {
+			exludedSecType = secType
+			secType = SECURITY_TYPE.STOCK
+		}
+	}
+
+	assert(SECURITY_TYPES.includes(secType), 'secType is invalid: ' + secType)
+
+	let [ excludedSecTypeCurrency, currency = DEFAULT_CURRENCY ] = exludedSecType.split('/')
+	let [ exchange, symbol ] = excludedSecTypeCurrency.split(':')
+
+	if (symbol === undefined) {
+		symbol = exchange
+		exchange = undefined
+	}
+
+	assert(symbol, 'symbol is required')
+
+	const contract = {
+		symbol,
+		currency,
+		secType,
+		exchange
+	}
 
 	switch (secType) {
 		case SECURITY_TYPE.STOCK:
-		case SECURITY_TYPE.CFD:
-			// symbol, exchange=SMART, currency-USD
-
-			if (symbol === undefined) {
-				symbol = exchange
-				args = [ symbol ]
-			} else {
-				args = [ symbol, exchange ]
-			}
-
-			if (currency) {
-				args.push(currency)
-			}
+		case SECURITY_TYPE.COMMODITY:
 			break
 		case SECURITY_TYPE.FOREX:
-			// symbol, currency
-			assert(currency, 'forex instrument must have this format: symbol/currency')
+			// Swap between symbol and currency if the ordering is incorrect.
+			if (CURRENCIES.indexOf(symbol) > CURRENCIES.indexOf(currency)) {
+				;[ symbol, currency ] = [ currency, symbol ]
+			}
 
-			args = [ _exsymbol, currency ]
+			if (!exchange) {
+				contract.exchange = 'IDEALPRO'
+			}
 			break
-		case SECURITY_TYPE.COMBO:
-			// symbol, currency=USD, exchange=SMART
-			args = [ symbol, currency, exchange ]
-			break
-		case SECURITY_TYPE.IND:
-			// symbol, currency='USD', exchange=CBOE
-			args = [ symbol, currency, exchange ]
+		case SECURITY_TYPE.INDEX:
+			if (!exchange) {
+				contract.exchange = 'CBOE'
+			}
 			break
 		case SECURITY_TYPE.FUTURE:
-			// symbol, expiry, currency=USD, exchange=ONE, multiplier
-			assert(expiry, 'expiry must be defined')
-			assert(multiplier, 'multiplier must be defined')
-			args = [ symbol, expiry, currency, exchange, multiplier ]
+			assert(expiry, 'expiry is required')
+			if (!exchange) {
+				contract.exchange = 'ONE'
+			}
+			Object.assign(contract, { expiry, multiplier })
 			break
 		case SECURITY_TYPE.OPTION:
-			// symbol, expiry, strike, right, exchange=SMART, currency=USD
-			assert(expiry, 'expiry must be defined')
-			assert(right, 'right must be defined')
-			assert(strike, 'strike must be defined')
-			args = [ symbol, expiry, strike, right, exchange, currency ]
+			assert(expiry, 'expiry is required')
+			assert(right, 'right is required')
+			assert(strike, 'strike is required')
+			Object.assign(contract, { expiry, right, strike, multiplier: multiplier || 100 })
 			break
 		case SECURITY_TYPE.FOP:
-			// symbol, expiry, strike, right, multiplier=50, exchange=GLOBEX, currency=USD
-			assert(expiry, 'expiry must be defined')
-			assert(right, 'right must be defined')
-			assert(strike, 'strike must be defined')
-			args = [ symbol, expiry, strike, right, multiplier, exchange, currency ]
+			assert(expiry, 'expiry is required')
+			assert(right, 'right is required')
+			assert(strike, 'strike is required')
+			if (!exchange) {
+				contract.exchange = 'GLOBEX'
+			}
+			Object.assign(contract, { expiry, right, strike, multiplier: multiplier || 50 })
 			break
-		default:
-			throw new Error('Security type is invalid: ' + secType)
 	}
 
-	return {
-		type: 'contract',
-		subtype: secType,
-		args
+	if (!contract.exchange) {
+		contract.exchange = DEFAULT_EXCHANGE
 	}
+
+	return contract
 }
 
 export const reqIdMappingFunc = ([ reqId ]) => ({ reqId })

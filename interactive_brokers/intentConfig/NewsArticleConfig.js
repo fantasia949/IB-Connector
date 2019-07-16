@@ -6,8 +6,8 @@ export default class NewsArticleConfig {
 	 * @param {string} articleId
 	 */
 	constructor (providerCode, articleId) {
-		assert(articleId, 'articleId must be defined')
-		assert(providerCode, 'providerCodes must be defined')
+		assert(articleId, 'articleId is required')
+		assert(providerCode, 'providerCodes is required')
 		this.providerCode = providerCode
 		this.articleId = articleId
 	}

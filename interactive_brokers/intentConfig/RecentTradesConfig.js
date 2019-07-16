@@ -5,9 +5,8 @@ export default class RecentTradesConfig extends MarketDataConfig {
 	/**
  *Creates an instance of RecentTradesConfig.
  * @param {string} exSymbol
- * @param {string} secType
  */
-	constructor (exSymbol, secType) {
-		super(exSymbol, secType, [ 'mdoff', GENERIC_TICK.RT_TRADE_VOLUME ].join(','), false, false)
+	constructor (exSymbol) {
+		super(exSymbol, [ 'mdoff', GENERIC_TICK.RT_VOLUME, GENERIC_TICK.RT_TRADE_VOLUME ].join(','), false, false)
 	}
 }

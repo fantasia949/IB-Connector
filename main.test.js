@@ -1,5 +1,7 @@
-import { MARKET_DATA_TYPE, SERVER_LOG_LEVEL } from './interactive_brokers/constants'
+import { MARKET_DATA_TYPE, SERVER_LOG_LEVEL, RIGHT_TYPE } from './interactive_brokers/constants'
 import IbConnector from './interactive_brokers'
+import { EVENT } from './interactive_brokers/constants'
+import { exchangeUtils } from './interactive_brokers/utils'
 
 const connectorConfig = {
 	username: 'hxvn0001',
@@ -10,15 +12,13 @@ const connectorConfig = {
 }
 
 const ib = new IbConnector(connectorConfig)
+ib.on(EVENT.ERROR, (uuid, err) => console.log(uuid, err))
+ib.on(EVENT.COMMAND_SEND, message => console.log(JSON.stringify(message)))
 
-const facebookConId = 107113386
 const facebookSymbol = 'fb'
 
 describe("test IB connector's direct call", () => {
-	beforeAll(async done => {
-		await ib.connect({ uuid: 'fb' })
-		done()
-	})
+	beforeAll(() => ib.connect({ uuid: 'fb' }))
 
 	test('getMatchingSymbols should have result', async () => {
 		const entry = await ib.getMatchingSymbols(facebookSymbol)
@@ -35,11 +35,6 @@ describe("test IB connector's direct call", () => {
 		expect(entry).toHaveLength(4)
 	})
 
-	test('getInstrumentDetails should have result', async () => {
-		const entry = await ib.getInstrumentDetails(facebookSymbol)
-		expect(entry).toHaveLength(1)
-	})
-
 	test('getInstrumentFundamental should have result', async () => {
 		const entry = await ib.getInstrumentFundamental(facebookSymbol)
 		expect(entry.data).toBeDefined()
@@ -54,7 +49,45 @@ describe("test IB connector's direct call", () => {
 		13 * 1000
 	)
 
-	afterAll(() => {
-		ib.disconnect()
+	test('getInstrumentDetails should have result', async () => {
+		const entry = await ib.getInstrumentDetails(facebookSymbol)
+		expect(entry).toHaveLength(1)
 	})
+
+	test("getInstrumentDetails using factory's contract.stock should have result", async () => {
+		const entry = await ib.getInstrumentDetails(exchangeUtils.stock(facebookSymbol))
+		expect(entry).toHaveLength(1)
+	})
+
+	test("getInstrumentDetails using factory's contract.forex should have result", async () => {
+		const entry = await ib.getInstrumentDetails(exchangeUtils.forex('eur/usd'))
+		expect(entry).toHaveLength(1)
+	})
+
+	test("getInstrumentDetails using factory's contract.index should have result", async () => {
+		const entry = await ib.getInstrumentDetails(exchangeUtils.index('vix'))
+		expect(entry).toHaveLength(1)
+	})
+
+	test("getInstrumentDetails using factory's contract.future should have result", async () => {
+		const entry = await ib.getInstrumentDetails(exchangeUtils.future('globex:es', '20200918'))
+		expect(entry).toHaveLength(1)
+	})
+
+	test("getInstrumentDetails using factory's contract.commodity should have result", async () => {
+		const entry = await ib.getInstrumentDetails(exchangeUtils.commodity('XAUUSD'))
+		expect(entry).toHaveLength(1)
+	})
+
+	test("getInstrumentDetails using factory's contract.option should have result", async () => {
+		const entry = await ib.getInstrumentDetails(exchangeUtils.option(facebookSymbol, RIGHT_TYPE.CALL, '20190830', 150))
+		expect(entry).toHaveLength(1)
+	})
+
+	test("getInstrumentDetails using factory's contract.futureOption should have result", async () => {
+		const entry = await ib.getInstrumentDetails(exchangeUtils.futureOption('es', RIGHT_TYPE.PUT, '20200320', 1600))
+		expect(entry).toHaveLength(1)
+	})
+
+	afterAll(() => ib.disconnect())
 })

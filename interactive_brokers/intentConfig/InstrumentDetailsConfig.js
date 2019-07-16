@@ -4,17 +4,15 @@ export default class InstrumentDetailsConfig {
 	/**
  *Creates an instance of InstrumentDetailConfig.
  * @param {string} exSymbol
- * @param {string} secType
  */
-	constructor (exSymbol, secType) {
-		assert(exSymbol, 'exSymbol must be defined')
+	constructor (exSymbol) {
+		assert(exSymbol, 'exSymbol is required')
 		this.exSymbol = exSymbol
-		this.secType = secType
 	}
 	toCommandParams (reqId) {
 		return [
 			reqId,
-			makeContract(this)
+			makeContract(this.exSymbol)
 		]
 	}
 }

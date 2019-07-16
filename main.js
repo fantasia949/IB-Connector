@@ -3,11 +3,9 @@ import {
 	MARKET_DATA_TYPE,
 	INTENT,
 	EVENT,
-	SECURITY_TYPE,
 	ORDER_TYPE,
 	ORDERBOOK_OPERATION,
 	ACCOUNT_EVENT,
-	MARKETDATA_EVENT,
 	NEWS_EVENT,
 	SERVER_LOG_LEVEL,
 	SCANNER_SUBSCRIPTION_FILTER
@@ -17,8 +15,8 @@ import * as icFactory from './interactive_brokers/intentConfig/factory'
 
 export const initIb = () => {
 	const connectorConfig = {
-		username: 'manta888',
-		password: 'Hydra2018',
+		username: 'hxvn0001',
+		password: 'Hydra2019',
 		serverLogLevel: SERVER_LOG_LEVEL.DETAIL,
 		// free user must set market data subscription to DELAYED in order to get market data
 		marketDataType: MARKET_DATA_TYPE.DELAYED
@@ -47,20 +45,21 @@ const main = async () => {
 	// setTimeout(() => ib.disconnect(), 40 * 1000)
 
 	// testWatchlist(ib, facebookSymbol)
-	// testOrderbook(ib, 'eur/usd', SECURITY_TYPE.FOREX)
+	testOrderbook(ib, 'forex@eur/usd')
 	// testAccount(ib)
-	// testRealtimeBars(ib, 'eur/usd', SECURITY_TYPE.FOREX)
-	testRecentTrades(ib, 'SEHKSZSE:000725/CNH') // Asian market
-	// testHistoricData(ib, 'eur/usd', SECURITY_TYPE.FOREX)
+	// testRealtimeBars(ib, 'forex@eur/usd')
+	// testRecentTrades(ib, 'SEHKSZSE:000725/CNH') // Asian market
+	// testHistoricData(ib, 'forex@eur/usd')
 	// testPositions(ib)
 	// testHistoricalNews(ib, facebookConId, [
 	// 	'BRFG',
 	// 	'BRFUPDN',
 	// 	'DJNL'
 	// ])
-	// testRecentNews(ib, facebookSymbol, SECURITY_TYPE.STOCK, 'BRFG')
+	// testRecentNews(ib, facebookSymbol, 'BRFG')
 	// testScannerSubscription(ib)
 
+	// requires RT subscription
 	// testTrading(ib, facebookSymbol)
 	// setTimeout(() => testOpenOrders(ib), 4 * 1000)
 
@@ -74,17 +73,17 @@ const main = async () => {
 	// await testInstrumentFundamental(ib, facebookSymbol)
 	// await testScannerParameters(ib)
 
-	// not work
+	// requires TWS/gateway >= 976
 	// await testCompletedOrders(ib)
 }
 
 main().catch(err => console.error(err))
 
-const testWatchlist = (ib, exSymbol, secType) => {
+const testWatchlist = (ib, exSymbol) => {
 	const watchlist = { bid: '-', ask: '-', last: '-', lastTraded: '-', volume: '-', close: '-', open: '-' }
 
 	let watchlistTimeoutId = undefined
-	ib.subscribe(INTENT.LIVE_MARKET_DATA, icFactory.marketDataConfig(exSymbol, secType), (_, data) => {
+	ib.subscribe(INTENT.LIVE_MARKET_DATA, icFactory.marketDataConfig(exSymbol), (_, data) => {
 		Object.keys(watchlist).filter(field => data[field] !== undefined).forEach(field => (watchlist[field] = data[field]))
 
 		clearTimeout(watchlistTimeoutId)
@@ -92,12 +91,12 @@ const testWatchlist = (ib, exSymbol, secType) => {
 	})
 }
 
-const testWatchlistSnapshot = async (ib, exSymbol, secType) => {
-	const result = await ib.getMarketdataSnapshot(exSymbol, secType)
+const testWatchlistSnapshot = async (ib, exSymbol) => {
+	const result = await ib.getMarketdataSnapshot(exSymbol)
 	console.log(result)
 }
 
-const testOrderbook = (ib, exSymbol, secType) => {
+const testOrderbook = (ib, exSymbol) => {
 	const orderbookEntry = { price: '-', size: '-' }
 	const orderbook = Array.from({ length: 2 }).fill([
 		{ ...orderbookEntry },
@@ -107,7 +106,7 @@ const testOrderbook = (ib, exSymbol, secType) => {
 
 	ib.subscribe(
 		INTENT.LIVE_ORDERBOOK,
-		icFactory.orderbookConfig(exSymbol, secType, 2),
+		icFactory.orderbookConfig(exSymbol, 2),
 		(_, { position, operation, side, price, size }) => {
 			switch (operation) {
 				case ORDERBOOK_OPERATION.INSERT:
@@ -127,13 +126,13 @@ const testOrderbook = (ib, exSymbol, secType) => {
 	)
 }
 
-const testInstrumentDetail = async (ib, exSymbol, secType) => {
-	const result = await ib.getInstrumentDetails(exSymbol, secType)
+const testInstrumentDetail = async (ib, exSymbol) => {
+	const result = await ib.getInstrumentDetails(exSymbol)
 	console.log(result)
 }
 
-const testInstrumentFundamental = async (ib, exSymbol, secType) => {
-	const result = await ib.getInstrumentFundamental(exSymbol, secType)
+const testInstrumentFundamental = async (ib, exSymbol) => {
+	const result = await ib.getInstrumentFundamental(exSymbol)
 	console.log(result)
 }
 
@@ -152,20 +151,20 @@ const testAccount = async ib => {
 	)
 }
 
-const testRealtimeBars = (ib, exSymbol, secType, whatToShow) => {
-	ib.subscribe(INTENT.LIVE_BAR, icFactory.realtimeBarConfig(exSymbol, secType, whatToShow), (uuid, data, event) =>
+const testRealtimeBars = (ib, exSymbol, whatToShow) => {
+	ib.subscribe(INTENT.LIVE_BAR, icFactory.realtimeBarConfig(exSymbol, whatToShow), (uuid, data, event) =>
 		console.log(uuid, data, event)
 	)
 }
 
-const testRecentTrades = (ib, exSymbol, secType) => {
-	ib.subscribe(INTENT.LIVE_TRADES, icFactory.recentTradesConfig(exSymbol, secType), (uuid, data, event) =>
+const testRecentTrades = (ib, exSymbol) => {
+	ib.subscribe(INTENT.LIVE_TRADES, icFactory.recentTradesConfig(exSymbol), (uuid, data, event) =>
 		console.log(uuid, data, event)
 	)
 }
 
-const testHistoricData = (ib, exSymbol, secType, whatToShow) => {
-	ib.subscribe(INTENT.HISTORICAL_BAR, icFactory.historicalDataConfig(exSymbol, secType, whatToShow), (uuid, data, event) =>
+const testHistoricData = (ib, exSymbol, whatToShow) => {
+	ib.subscribe(INTENT.HISTORICAL_BAR, icFactory.historicalDataConfig(exSymbol, whatToShow), (uuid, data, event) =>
 		console.log(uuid, exSymbol, data, event)
 	)
 }

@@ -20,7 +20,7 @@ import {
 } from './commandFactory'
 import * as icFactory from './intentConfig/factory'
 
-const { subscribe, unsubscribe } = new websocket_connection_manager()
+const { subscribe } = new websocket_connection_manager()
 
 const attachRequestManagertoSocket = socket =>
 	Object.assign(socket, {
@@ -78,13 +78,6 @@ class IbConnector extends EventEmitter {
 	}
 
 	/**
-	* 
-	* @typedef SubscriptionConfig
-		@property {string} secType - security type (stock, forex,...)
-	  @property {number=1} numRows - the number of rows on each side of the order book
-	*/
-
-	/**
 	 *
 	 * @callback subscriptionCallback
 	 * @param {number} uuid
@@ -96,7 +89,7 @@ class IbConnector extends EventEmitter {
 	 * Start listening an instrument
 	 *
 	 * @param {string} intent
-	 * @param {SubscriptionConfig} config
+	 * @param {object} config - instance of intentConfig
 	 * @param {subscriptionCallback=} cb
 	 * @returns {number} request ID
 	 * @memberof IbConnector
@@ -184,11 +177,11 @@ class IbConnector extends EventEmitter {
 		return data
 	}
 
-	async getInstrumentDetails (exSymbol, secType) {
+	async getInstrumentDetails (exSymbol) {
 		const command = makeRequestSubscriptionCommand(
 			INTENT.INSTRUMENT_DETAILS,
 			this._socket.getReqId(),
-			icFactory.instrumentDetailsConfig(exSymbol, secType)
+			icFactory.instrumentDetailsConfig(exSymbol)
 		)
 
 		const response = await this._getData(
@@ -202,11 +195,11 @@ class IbConnector extends EventEmitter {
 		return response.data
 	}
 
-	async getInstrumentFundamental (exSymbol, secType) {
+	async getInstrumentFundamental (exSymbol) {
 		const command = makeRequestSubscriptionCommand(
 			INTENT.INSTRUMENT_FUNDAMENTAL,
 			this._socket.getReqId(),
-			icFactory.instrumentFundamentalConfig(exSymbol, secType)
+			icFactory.instrumentFundamentalConfig(exSymbol)
 		)
 
 		const response = await this._getData(command, MARKETDATA_EVENT.FUNDAMENTAL_DATA)
@@ -215,11 +208,11 @@ class IbConnector extends EventEmitter {
 		return data
 	}
 
-	async getMarketdataSnapshot (exSymbol, secType) {
+	async getMarketdataSnapshot (exSymbol) {
 		const command = makeRequestSubscriptionCommand(
 			INTENT.LIVE_MARKET_DATA,
 			this._socket.getReqId(),
-			icFactory.marketDataConfig(exSymbol, secType, GENERIC_TICK.DEFAULT, true)
+			icFactory.marketDataConfig(exSymbol, GENERIC_TICK.DEFAULT, true)
 		)
 
 		const response = await this._getData(
@@ -273,7 +266,6 @@ class IbConnector extends EventEmitter {
 	/**
 	* 
 	* @typedef OrderConfig
-	* @property {string=stock} secType - security type
 		@property {boolean=true} transmitOrder
 	* @property {number} price - only available to stop + limit order
 	* @property {string} goodAfterTime - only available to market order
@@ -288,7 +280,7 @@ class IbConnector extends EventEmitter {
 	/**
 	 * Place an order
 	 *
-	 * @param {string} exSymbol - exchange:symbol , or symbol/currency, or symbol
+	 * @param {string} exSymbol
 	 * @param {string} orderType
 	 * @param {number} quantity
 	 * @param {OrderConfig} orderConfig
@@ -312,7 +304,7 @@ class IbConnector extends EventEmitter {
 	/**
 	 * Cancel an order
 	 *
-	 * @param {string} exSymbol - exchange:symbol , or symbol/currency, or symbol
+	 * @param {string} orderId
 	 */
 	cancelOrder (orderId) {
 		const message = makeCancelOrderCommand(orderId)
@@ -378,24 +370,33 @@ class IbConnector extends EventEmitter {
 	/**
 	 * disconnect from IB proxy and release related resources
 	 *
-	 * @returns {boolean}
+	 * @returns {Promise}
 	 * @memberof IbConnector
 	 */
 	disconnect () {
-		this._checkConnected()
+		return new Promise((resolve, reject) => {
+			this._checkConnected(reject)
 
-		const socket = this._socket
-		this._responseHandlers = {}
-		this._socket = undefined
+			const socket = this._socket
+			socket.close()
 
-		return unsubscribe(socket)
+			this._responseHandlers = {}
+			this._socket = undefined
+
+			setTimeout(resolve)
+		})
 	}
 
-	_checkConnected () {
+	_checkConnected (errCb) {
 		const socket = this._socket
 
 		if (!socket || socket.readyState === socket.CLOSED) {
-			throw new Error('The connection is already closed')
+			const message = 'The connection is already closed'
+			if (errCb) {
+				errCb(message)
+			} else {
+				throw new Error(message)
+			}
 		}
 	}
 
@@ -501,7 +502,7 @@ class IbConnector extends EventEmitter {
 
 		this.emit(EVENT.COMMAND_SEND, message)
 
-		this._socket.send(JSON.stringify(message))
+		this._socket.send(JSON.stringify(message, (k, v) => (v === undefined ? '' : v)))
 	}
 	_onMessageEvent (eventName, cb) {
 		const socket = this._socket
@@ -541,7 +542,7 @@ export default class SimpleIbConnector extends IbConnector {
 		config.endpoint = 'ws://127.0.0.1:3000'
 		super(config)
 	}
-	async subscribe (intent, config, cb) {
+	subscribe (intent, config, cb) {
 		return super.onSubscription(intent, config, cb)
 	}
 

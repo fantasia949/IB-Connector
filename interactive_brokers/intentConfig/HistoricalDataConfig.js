@@ -4,16 +4,14 @@ export default class HistoricalDataConfig {
 	/**
 	 *Creates an instance of HistoricalDataConfig.
 	 * @param {string} exSymbol
-	 * @param {string} secType
 	 * @param {string} endDateTime
 	 * @param {string} durationString
 	 * @param {string} barSizeSetting
 	 * @param {string} whatToShow
 	 */
-	constructor (exSymbol, secType, endDateTime, durationString, barSizeSetting, whatToShow) {
-		assert(exSymbol, 'exSymbol must be defined')
+	constructor (exSymbol, endDateTime, durationString, barSizeSetting, whatToShow) {
+		assert(exSymbol, 'exSymbol is required')
 		this.exSymbol = exSymbol
-		this.secType = secType
 		this.endDateTime = endDateTime
 		this.durationString = durationString
 		this.barSizeSetting = barSizeSetting
@@ -25,7 +23,7 @@ export default class HistoricalDataConfig {
 	toCommandParams (reqId) {
 		return [
 			reqId,
-			makeContract(this),
+			makeContract(this.exSymbol),
 			this.endDateTime,
 			this.durationString,
 			this.barSizeSetting,
