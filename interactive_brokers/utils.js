@@ -46,7 +46,17 @@ export const exchangeUtils = {
 }
 
 export const makeOrder = (orderType, action, quantity, config = {}) => {
-	const { price, transmitOrder, goodAfterTime, goodTillDate, parentId, tif, limitPrice, stopPrice, auxPrice } = config
+	const {
+		price,
+		limitPrice,
+		stopPrice,
+		auxPrice,
+		transmitOrder = true,
+		goodAfterTime = '',
+		goodTillDate = '',
+		parentId = 0,
+		tif = 'DAY'
+	} = config
 
 	let args = [ action, quantity ]
 

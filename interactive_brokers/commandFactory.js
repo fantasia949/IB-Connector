@@ -1,4 +1,4 @@
-import { INTENT, SUBSCRIPTION_TYPE, ORDER_ACTION } from './constants'
+import { INTENT, SUBSCRIPTION_TYPE, ORDER_ACTIONS, ORDER_TYPES } from './constants'
 import { makeContract, makeOrder } from './utils'
 import assert from 'assert'
 import {
@@ -78,10 +78,14 @@ export const makeCancelSubscriptionCommand = (intent, reqId) => {
 	return { command, args }
 }
 
-export const makePlaceOrderCommand = (orderId, orderType, exSymbol, quantity, config) => {
+export const makePlaceOrderCommand = (orderId, action, orderType, exSymbol, quantity, config) => {
 	const command = 'placeOrder'
-
-	const args = [ orderId, makeContract(exSymbol), makeOrder(orderType, ORDER_ACTION.BUY, quantity, config) ]
+	assert(orderId, 'orderId is required')
+	assert(ORDER_ACTIONS.includes(action), 'action is invalid')
+	assert(ORDER_TYPES.includes(orderType), 'orderType is invalid')
+	assert(exSymbol, 'exSymbol is required')
+	assert(quantity > 0, 'quantity is invalid')
+	const args = [ orderId, makeContract(exSymbol), makeOrder(orderType, action, quantity, config) ]
 
 	return { command, args }
 }

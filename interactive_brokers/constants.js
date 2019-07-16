@@ -88,6 +88,7 @@ export const INTENT = {
 	LIVE_PORTFOLIO: 'portfolio',
 	LIVE_BAR: 'live_bar',
 	OPEN_ORDERS: 'subscribe_open_orders',
+	ALL_OPEN_ORDERS: 'subscribe_all_open_orders',
 	COMPLETED_ORDERS: 'subscribe_completed_orders',
 	HISTORICAL_BAR: 'historical_data',
 	INSTRUMENT_DETAILS: 'contract_details',
@@ -110,6 +111,7 @@ export const SUBSCRIPTION_TYPE = {
 	[INTENT.LIVE_ACCOUNT_SUMMARY]: 'AccountSummary',
 	[INTENT.LIVE_PORTFOLIO]: 'AccountUpdates',
 	[INTENT.OPEN_ORDERS]: 'OpenOrders',
+	[INTENT.ALL_OPEN_ORDERS]: 'AllOpenOrders',
 	[INTENT.COMPLETED_ORDERS]: 'CompletedOrders',
 	[INTENT.HISTORICAL_BAR]: 'HistoricalData',
 	[INTENT.INSTRUMENT_DETAILS]: 'ContractDetails',
@@ -237,10 +239,14 @@ export const ORDER_TYPE = {
 	TRAILING_STOP: 'trailingStop'
 }
 
+export const ORDER_TYPES = Object.values(ORDER_TYPE)
+
 export const ORDER_ACTION = {
 	BUY: 'BUY',
 	SELL: 'SELL'
 }
+
+export const ORDER_ACTIONS = Object.values(ORDER_ACTION)
 
 export const ORDERBOOK_OPERATION = {
 	INSERT: 0,

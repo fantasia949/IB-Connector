@@ -237,13 +237,17 @@ class IbConnector extends EventEmitter {
 		return result
 	}
 
-	async getOpenOrders () {
-		const command = makeRequestSubscriptionCommand(INTENT.OPEN_ORDERS)
+	async getOpenOrders (all) {
+		if (all && !this._config.isMaster) {
+			throw new Error('Only show all orders if the client is master client')
+		}
+
+		const command = makeRequestSubscriptionCommand(all ? INTENT.ALL_OPEN_ORDERS : INTENT.OPEN_ORDERS)
 		const response = await this._getData(
 			command,
 			TRADE_EVENT.ORDER_OPEN_END,
 			[ TRADE_EVENT.ORDER_OPEN ],
-			(result, message) => [ ...result, parseMessage(message).data ],
+			(result, data, event) => [ ...result, parseMessage({ event, data }).data ],
 			[]
 		)
 
@@ -256,7 +260,7 @@ class IbConnector extends EventEmitter {
 			command,
 			TRADE_EVENT.ORDER_COMPLETED_END,
 			[ TRADE_EVENT.ORDER_COMPLETED ],
-			(result, message) => [ ...result, parseMessage(message).data ],
+			(result, data, event) => [ ...result, parseMessage({ event, data }).data ],
 			[]
 		)
 
@@ -280,13 +284,14 @@ class IbConnector extends EventEmitter {
 	/**
 	 * Place an order
 	 *
+	 * @param {string} action
 	 * @param {string} exSymbol
 	 * @param {string} orderType
 	 * @param {number} quantity
 	 * @param {OrderConfig} orderConfig
 	 * @memberof IbConnector
 	 */
-	async placeOrder (exSymbol, orderType, quantity, orderConfig) {
+	async placeOrder (action, exSymbol, orderType, quantity, orderConfig) {
 		const getOrderICommand = {
 			command: 'reqIds',
 			args: [ 1 ]
@@ -295,7 +300,7 @@ class IbConnector extends EventEmitter {
 		const { data } = await this._getData(getOrderICommand, TRADE_EVENT.NEXT_ORDER_ID)
 		const [ orderId ] = data
 
-		const message = makePlaceOrderCommand(orderId, orderType, exSymbol, quantity, orderConfig)
+		const message = makePlaceOrderCommand(orderId, action, orderType, exSymbol, quantity, orderConfig)
 		this._sendCommand(message)
 
 		return orderId
@@ -482,9 +487,9 @@ class IbConnector extends EventEmitter {
 	}
 
 	_initConnection (config) {
-		const { username, password } = this._config
+		const { username, password, isMaster } = this._config
 
-		const query = new URLSearchParams([ [ 'username', username ], [ 'password', password ] ])
+		const query = new URLSearchParams([ [ 'username', username ], [ 'password', password ], [ 'isMaster', isMaster ] ])
 
 		const url = `${this._getStream(config)}?${query}`
 
@@ -539,7 +544,7 @@ class IbConnector extends EventEmitter {
 
 export default class SimpleIbConnector extends IbConnector {
 	constructor (config) {
-		config.endpoint = config.endpoint || 'ws://127.0.0.1:3000'
+		config = { isMaster: 1, endpoint: 'ws://127.0.0.1:3000', ...config }
 		super(config)
 	}
 }

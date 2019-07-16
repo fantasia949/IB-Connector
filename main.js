@@ -8,7 +8,8 @@ import {
 	ACCOUNT_EVENT,
 	NEWS_EVENT,
 	SERVER_LOG_LEVEL,
-	SCANNER_SUBSCRIPTION_FILTER
+	SCANNER_SUBSCRIPTION_FILTER,
+	ORDER_ACTION
 } from './interactive_brokers/constants'
 
 import * as icFactory from './interactive_brokers/intentConfig/factory'
@@ -45,11 +46,10 @@ const main = async () => {
 	// setTimeout(() => ib.disconnect(), 40 * 1000)
 
 	// testWatchlist(ib, facebookSymbol)
-	testOrderbook(ib, 'forex@eur/usd')
+	// testOrderbook(ib, 'cash@eur/usd')
 	// testAccount(ib)
-	// testRealtimeBars(ib, 'forex@eur/usd')
-	// testRecentTrades(ib, 'SEHKSZSE:000725/CNH') // Asian market
-	// testHistoricData(ib, 'forex@eur/usd')
+	// testRealtimeBars(ib, 'cash@eur/usd')
+	// testHistoricData(ib, 'cash@eur/usd')
 	// testPositions(ib)
 	// testHistoricalNews(ib, facebookConId, [
 	// 	'BRFG',
@@ -60,8 +60,9 @@ const main = async () => {
 	// testScannerSubscription(ib)
 
 	// requires RT subscription
-	// testTrading(ib, facebookSymbol)
-	// setTimeout(() => testOpenOrders(ib), 4 * 1000)
+	// testRecentTrades(ib, 'SEHKSZSE:000725/CNH') // Asian market
+	testTrading(ib, 'cash@eur/usd')
+	setTimeout(() => testGetOpenOrders(ib), 3000)
 
 	// testPortfolio(ib)
 
@@ -98,32 +99,25 @@ const testWatchlistSnapshot = async (ib, exSymbol) => {
 
 const testOrderbook = (ib, exSymbol) => {
 	const orderbookEntry = { price: '-', size: '-' }
-	const orderbook = Array.from({ length: 2 }).fill([
-		{ ...orderbookEntry },
-		{ ...orderbookEntry }
-	])
+	const orderbook = Array.from({ length: 2 }).fill([ { ...orderbookEntry }, { ...orderbookEntry } ])
 	let orderbookTimeoutId = undefined
 
-	ib.subscribe(
-		INTENT.LIVE_ORDERBOOK,
-		icFactory.orderbookConfig(exSymbol, 2),
-		(_, { position, operation, side, price, size }) => {
-			switch (operation) {
-				case ORDERBOOK_OPERATION.INSERT:
-					orderbook[position][side] = { price, size }
-					break
-				case ORDERBOOK_OPERATION.UPDATE:
-					Object.assign(orderbook[position][side], JSON.parse(JSON.stringify({ price, size })))
-					break
-				case ORDERBOOK_OPERATION.DELETE:
-					orderbook[position][side] = { ...orderbookEntry }
-					break
-			}
-
-			clearTimeout(orderbookTimeoutId)
-			orderbookTimeoutId = setTimeout(() => console.log(orderbook), 300)
+	ib.subscribe(INTENT.LIVE_ORDERBOOK, icFactory.orderbookConfig(exSymbol, 2), (_, { position, operation, side, price, size }) => {
+		switch (operation) {
+			case ORDERBOOK_OPERATION.INSERT:
+				orderbook[position][side] = { price, size }
+				break
+			case ORDERBOOK_OPERATION.UPDATE:
+				Object.assign(orderbook[position][side], JSON.parse(JSON.stringify({ price, size })))
+				break
+			case ORDERBOOK_OPERATION.DELETE:
+				orderbook[position][side] = { ...orderbookEntry }
+				break
 		}
-	)
+
+		clearTimeout(orderbookTimeoutId)
+		orderbookTimeoutId = setTimeout(() => console.log(orderbook), 300)
+	})
 }
 
 const testInstrumentDetail = async (ib, exSymbol) => {
@@ -158,9 +152,7 @@ const testRealtimeBars = (ib, exSymbol, whatToShow) => {
 }
 
 const testRecentTrades = (ib, exSymbol) => {
-	ib.subscribe(INTENT.LIVE_TRADES, icFactory.recentTradesConfig(exSymbol), (uuid, data, event) =>
-		console.log(uuid, data, event)
-	)
+	ib.subscribe(INTENT.LIVE_TRADES, icFactory.recentTradesConfig(exSymbol), (uuid, data, event) => console.log(uuid, data, event))
 }
 
 const testHistoricData = (ib, exSymbol, whatToShow) => {
@@ -173,8 +165,8 @@ const testPositions = ib => {
 	ib.subscribe(INTENT.LIVE_OPEN_POSITIONS, icFactory.defaultIntentConfig(), (uuid, data, event) => console.log(uuid, data, event))
 }
 
-const testOpenOrders = async ib => {
-	const orders = await ib.getOpenOrders()
+const testGetOpenOrders = async ib => {
+	const orders = await ib.getOpenOrders({ all: true })
 	console.log(orders)
 }
 
@@ -183,9 +175,9 @@ const testCompletedOrders = async ib => {
 	console.log(orders)
 }
 
-const testTrading = async (ib, facebookSymbol) => {
-	const orderId = await ib.placeOrder(facebookSymbol, ORDER_TYPE.LIMIT, 10, { price: 0.01 })
-	setTimeout(() => ib.cancelOrder(orderId), 8 * 1000)
+const testTrading = async (ib, symbol) => {
+	const orderId = await ib.placeOrder(ORDER_ACTION.BUY, symbol, ORDER_TYPE.LIMIT, 1, { price: 0.01 })
+	setTimeout(() => ib.cancelOrder(orderId), 12 * 1000)
 }
 
 const testPortfolio = ib => {
