@@ -9,15 +9,21 @@
     "path": "^0.12.7",
     "webpack-cli": "^3.3.0",
     "webpack-notifier": "^1.7.0",
-    "ws": "^6.2.1"
+    "ws": "^7.0.1",
+    "xml-js": "^1.6.11"
   },
   "devDependencies": {
-    "webpack": "^4.30.0",
     "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.7.0"
+    "babel-preset-env": "^1.7.0",
+    "jest": "^24.8.0",
+    "webpack": "^4.30.0"
   },
   "scripts": {
-    "start": "webpack --config webpack.config.js && node ./dist/index.js"
+    "start": "npm run build && node ./dist/index.js",
+    "build": "webpack --config ./webpack.config.js --entry=./main.js --output-filename=index.js",
+    "build-job": "webpack --config ./webpack.config.js --entry=./interactive_brokers/jobs/scannerParamsJob.js --output-filename=scannerParamsJob.js",
+    "run-job": "node ./dist/scannerParamsJob.js",
+    "test": "webpack --config ./webpack.config.js --entry=./main.test.js --output-filename=main.test.js && jest --detectOpenHandles --maxWorkers=1 --forceExit"
   },
   "repository": {
     "type": "git",

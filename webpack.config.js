@@ -10,11 +10,12 @@ module.exports = {
     path: path.resolve(__dirname, 'dist')
   },
   mode: 'development',
+  externals: [/node_modules/, 'bufferutil', 'utf-8-validate'],
   stats: {
     warnings: false
   },
   plugins: [
-    new WebpackNotifierPlugin(),
+    // new WebpackNotifierPlugin(),
   ],
   optimization: {
     minimize: false // save time
