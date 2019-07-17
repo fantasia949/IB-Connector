@@ -1,22 +1,17 @@
 {
-  "name": "ib_integration",
+  "name": "@fantasia949/ib-connector",
   "version": "1.0.0",
-  "description": "Interactive Brokers integration to Sigma exchnage API ",
-  "main": "main.js",
+  "description": "Interactive Brokers connector",
+  "homepage": "https://github.com/fantasia949/IB-Connector",
+  "main": "interactive_brokers/index.js",
   "dependencies": {
-    "ccxt": "^1.18.613",
-    "lodash": "^4.17.11",
-    "path": "^0.12.7",
-    "webpack-cli": "^3.3.0",
-    "webpack-notifier": "^1.7.0",
-    "ws": "^7.0.1",
+    "ws": "^7.1.0",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
     "jest": "^24.8.0",
-    "webpack": "^4.30.0"
+    "webpack": "^4.35.3",
+    "webpack-cli": "^3.3.6"
   },
   "scripts": {
     "start": "npm run build && node ./dist/index.js",
@@ -27,12 +22,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/HydraXTrader/IB_integration.git"
+    "url": "git+https://github.com/fantasia949/IB-Connector.git"
   },
-  "author": "Hugo Brunet",
+  "author": "fantasia949",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/HydraXTrader/IB_integration/issues"
-  },
-  "homepage": "https://github.com/HydraXTrader/IB_integration#readme"
+    "url": "https://github.com/fantasia949/IB-Connector/issues"
+  }
 }

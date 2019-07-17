@@ -3,7 +3,6 @@ import {
 	MARKET_DATA_TYPE,
 	INTENT,
 	EVENT,
-	ORDER_TYPE,
 	ORDERBOOK_OPERATION,
 	ACCOUNT_EVENT,
 	NEWS_EVENT,
@@ -13,6 +12,7 @@ import {
 } from './interactive_brokers/constants'
 
 import * as icFactory from './interactive_brokers/intentConfig/factory'
+import { orderUtils } from './interactive_brokers/utils'
 
 export const initIb = () => {
 	const connectorConfig = {
@@ -20,7 +20,9 @@ export const initIb = () => {
 		password: 'Hydra2019',
 		serverLogLevel: SERVER_LOG_LEVEL.DETAIL,
 		// free user must set market data subscription to DELAYED in order to get market data
-		marketDataType: MARKET_DATA_TYPE.DELAYED
+		marketDataType: MARKET_DATA_TYPE.DELAYED,
+		isMaster: 1,
+		endpoint: 'ws://127.0.0.1:3000'
 	}
 
 	const ib = new IbConnector(connectorConfig)
@@ -176,7 +178,7 @@ const testCompletedOrders = async ib => {
 }
 
 const testTrading = async (ib, symbol) => {
-	const orderId = await ib.placeOrder(ORDER_ACTION.BUY, symbol, ORDER_TYPE.LIMIT, 1, { price: 0.01 })
+	const orderId = await ib.placeOrder(symbol, orderUtils.limit(ORDER_ACTION.BUY, 1, 0.1))
 	setTimeout(() => ib.cancelOrder(orderId), 12 * 1000)
 }
 

@@ -8,7 +8,9 @@ const connectorConfig = {
 	password: 'Hydra2019',
 	serverLogLevel: SERVER_LOG_LEVEL.DETAIL,
 	// free user must set market data subscription to DELAYED in order to get market data
-	marketDataType: MARKET_DATA_TYPE.DELAYED
+	marketDataType: MARKET_DATA_TYPE.DELAYED,
+	isMaster: 1,
+	endpoint: 'ws://127.0.0.1:3000'
 }
 
 const ib = new IbConnector(connectorConfig)

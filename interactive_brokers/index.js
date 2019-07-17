@@ -1,5 +1,5 @@
 import assert from 'assert'
-import websocket_connection_manager from '../websocket_connection_manager'
+import WebSocket from 'ws'
 import EventEmitter from 'events'
 import {
 	MARKET_DATA_TYPE,
@@ -20,15 +20,17 @@ import {
 } from './commandFactory'
 import * as icFactory from './intentConfig/factory'
 
-const { subscribe } = new websocket_connection_manager()
-
-const attachRequestManagertoSocket = socket =>
+const createWs = url => {
+	const socket = new WebSocket(url)
 	Object.assign(socket, {
 		_reqId: 1,
 		getReqId: function () {
 			return this._reqId++
 		}
 	})
+
+	return socket
+}
 
 /**
  * @typedef IbConnectorConfig
@@ -39,7 +41,7 @@ const attachRequestManagertoSocket = socket =>
  * @property {number=} serverLogLevel
  */
 
-class IbConnector extends EventEmitter {
+export default class IbConnector extends EventEmitter {
 	/**
 	 *Creates an instance of IbConnector.
 	 * @param {IbConnectorConfig} [config={}]
@@ -268,30 +270,14 @@ class IbConnector extends EventEmitter {
 	}
 
 	/**
-	* 
-	* @typedef OrderConfig
-		@property {boolean=true} transmitOrder
-	* @property {number} price - only available to stop + limit order
-	* @property {string} goodAfterTime - only available to market order
-	* @property {string} goodTillDate - only available to market order
-	* @property {number=0} parentId -  only available to stop + stop limit + trailing stop order
-	* @property {string=DAY} tif - only available to stop + stop limit + trailing stop order
-	* @property {number} limitPrice - only available to stop limit order
-	* @property {number} stopPrice - only available to stop limit order
-	* @property {number} auxPrice - only available to trailing stop order
-	*/
-
-	/**
 	 * Place an order
 	 *
-	 * @param {string} action
 	 * @param {string} exSymbol
-	 * @param {string} orderType
-	 * @param {number} quantity
 	 * @param {OrderConfig} orderConfig
+	 * @returns {number} orderId
 	 * @memberof IbConnector
 	 */
-	async placeOrder (action, exSymbol, orderType, quantity, orderConfig) {
+	async placeOrder (exSymbol, orderConfig) {
 		const getOrderICommand = {
 			command: 'reqIds',
 			args: [ 1 ]
@@ -300,7 +286,7 @@ class IbConnector extends EventEmitter {
 		const { data } = await this._getData(getOrderICommand, TRADE_EVENT.NEXT_ORDER_ID)
 		const [ orderId ] = data
 
-		const message = makePlaceOrderCommand(orderId, action, orderType, exSymbol, quantity, orderConfig)
+		const message = makePlaceOrderCommand(orderId, exSymbol, orderConfig)
 		this._sendCommand(message)
 
 		return orderId
@@ -493,11 +479,7 @@ class IbConnector extends EventEmitter {
 
 		const url = `${this._getStream(config)}?${query}`
 
-		const socket = subscribe(config.uuid, [ url, {} ])
-
-		attachRequestManagertoSocket(socket)
-
-		return socket
+		return createWs(url)
 	}
 
 	_sendCommand (message) {
@@ -539,12 +521,5 @@ class IbConnector extends EventEmitter {
 	}
 	_getStream () {
 		return this._config.endpoint
-	}
-}
-
-export default class SimpleIbConnector extends IbConnector {
-	constructor (config) {
-		config = { isMaster: 1, endpoint: 'ws://127.0.0.1:3000', ...config }
-		super(config)
 	}
 }

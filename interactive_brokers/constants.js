@@ -231,12 +231,12 @@ export const TICK_STRING_FIELD = {
 }
 
 export const ORDER_TYPE = {
-	LIMIT: 'limit',
-	MARKET: 'market',
-	MARKET_CLOSE: 'marketClose',
-	STOP: 'stop',
-	STOP_LIMIT: 'stopLimit',
-	TRAILING_STOP: 'trailingStop'
+	LIMIT: 'LMT',
+	MARKET: 'MKT',
+	MARKET_CLOSE: 'MOC',
+	STOP: 'STP',
+	STOP_LIMIT: 'STP LMT',
+	TRAILING_STOP: 'TRAIL'
 }
 
 export const ORDER_TYPES = Object.values(ORDER_TYPE)
