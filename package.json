@@ -1,21 +1,25 @@
 {
   "name": "@fantasia949/ib-connector",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "Interactive Brokers connector",
   "homepage": "https://github.com/fantasia949/IB-Connector",
   "main": "interactive_brokers/index.js",
+  "types": "./types.d.ts",
   "dependencies": {
+    "eslint-plugin-jest": "^22.10.0",
+    "tern": "^0.24.1",
     "ws": "^7.1.0",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
     "jest": "^24.8.0",
-    "webpack": "^4.35.3",
+    "webpack": "^4.36.1",
     "webpack-cli": "^3.3.6"
   },
   "scripts": {
-    "start": "npm run build && node ./dist/index.js",
-    "build": "webpack --config ./webpack.config.js --entry=./main.js --output-filename=index.js",
+    "pack": "webpack --config ./webpack.config.js --entry=./interactive_brokers/index.js  --output-filename=index.js",
+    "start": "npm run build && node ./dist/main.js",
+    "build": "webpack --config ./webpack.config.js --entry=./main.js --output-filename=main.js",
     "build-job": "webpack --config ./webpack.config.js --entry=./interactive_brokers/jobs/scannerParamsJob.js --output-filename=scannerParamsJob.js",
     "run-job": "node ./dist/scannerParamsJob.js",
     "test": "webpack --config ./webpack.config.js --entry=./main.test.js --output-filename=main.test.js && jest --detectOpenHandles --maxWorkers=1 --forceExit"

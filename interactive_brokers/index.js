@@ -9,7 +9,8 @@ import {
 	NEWS_EVENT,
 	MARKETDATA_EVENT,
 	GENERIC_TICK,
-	SERVER_LOG_LEVEL
+	SERVER_LOG_LEVEL,
+	SECURITY_TYPES
 } from './constants'
 import { parseMessage } from './parser'
 import {
@@ -37,8 +38,9 @@ const createWs = url => {
  * @property {string} username
  * @property {string} password
  * @property {string} endpoint
- * @property {number=} marketDatType
+ * @property {number=} marketDataType
  * @property {number=} serverLogLevel
+ * @property {number=0} isMaster
  */
 
 export default class IbConnector extends EventEmitter {
@@ -79,12 +81,21 @@ export default class IbConnector extends EventEmitter {
 		this._serverLogLevel = serverLogLevel
 	}
 
+	get connected () {
+		const socket = this._socket
+		return socket ? socket.readyState === socket.OPEN : false
+	}
+
+	get assets () {
+		return Object.entries(SECURITY_TYPES)
+	}
+
 	/**
 	 *
 	 * @callback subscriptionCallback
 	 * @param {number} uuid
-	 * @param {string} event
 	 * @param {object} result
+	 * @param {string} event
 	 */
 
 	/**
@@ -239,6 +250,13 @@ export default class IbConnector extends EventEmitter {
 		return result
 	}
 
+	/**
+	 * Get open orders
+	 *
+	 * @param {Boolean=false} all
+	 * @memberof IbConnector
+	 * returns Promise<Array>
+	 */
 	async getOpenOrders (all) {
 		if (all && !this._config.isMaster) {
 			throw new Error('Only show all orders if the client is master client')

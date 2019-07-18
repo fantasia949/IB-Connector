@@ -19,8 +19,12 @@ ib.on(EVENT.COMMAND_SEND, message => console.log(JSON.stringify(message)))
 
 const facebookSymbol = 'fb'
 
-describe("test IB connector's direct call", () => {
+describe('test IB connector\'s direct call', () => {
 	beforeAll(() => ib.connect({ uuid: 'fb' }))
+
+	test('connected should be true', async () => {
+		expect(ib.connected).toBeTruthy()
+	})
 
 	test('getMatchingSymbols should have result', async () => {
 		const entry = await ib.getMatchingSymbols(facebookSymbol)
@@ -56,37 +60,37 @@ describe("test IB connector's direct call", () => {
 		expect(entry).toHaveLength(1)
 	})
 
-	test("getInstrumentDetails using factory's contract.stock should have result", async () => {
+	test('getInstrumentDetails using factory\'s contract.stock should have result', async () => {
 		const entry = await ib.getInstrumentDetails(exchangeUtils.stock(facebookSymbol))
 		expect(entry).toHaveLength(1)
 	})
 
-	test("getInstrumentDetails using factory's contract.forex should have result", async () => {
+	test('getInstrumentDetails using factory\'s contract.forex should have result', async () => {
 		const entry = await ib.getInstrumentDetails(exchangeUtils.forex('eur/usd'))
 		expect(entry).toHaveLength(1)
 	})
 
-	test("getInstrumentDetails using factory's contract.index should have result", async () => {
+	test('getInstrumentDetails using factory\'s contract.index should have result', async () => {
 		const entry = await ib.getInstrumentDetails(exchangeUtils.index('vix'))
 		expect(entry).toHaveLength(1)
 	})
 
-	test("getInstrumentDetails using factory's contract.future should have result", async () => {
+	test('getInstrumentDetails using factory\'s contract.future should have result', async () => {
 		const entry = await ib.getInstrumentDetails(exchangeUtils.future('globex:es', '20200918'))
 		expect(entry).toHaveLength(1)
 	})
 
-	test("getInstrumentDetails using factory's contract.commodity should have result", async () => {
+	test('getInstrumentDetails using factory\'s contract.commodity should have result', async () => {
 		const entry = await ib.getInstrumentDetails(exchangeUtils.commodity('XAUUSD'))
 		expect(entry).toHaveLength(1)
 	})
 
-	test("getInstrumentDetails using factory's contract.option should have result", async () => {
+	test('getInstrumentDetails using factory\'s contract.option should have result', async () => {
 		const entry = await ib.getInstrumentDetails(exchangeUtils.option(facebookSymbol, RIGHT_TYPE.CALL, '20190830', 150))
 		expect(entry).toHaveLength(1)
 	})
 
-	test("getInstrumentDetails using factory's contract.futureOption should have result", async () => {
+	test('getInstrumentDetails using factory\'s contract.futureOption should have result', async () => {
 		const entry = await ib.getInstrumentDetails(exchangeUtils.futureOption('es', RIGHT_TYPE.PUT, '20200320', 1600))
 		expect(entry).toHaveLength(1)
 	})

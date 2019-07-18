@@ -1,5 +1,5 @@
 import * as configs from './'
-import { ACCOUNT_TAG, DATA_TO_SHOW, GENERIC_TICK, FUNDAMENTAL_REPORT_TYPE, SECURITY_TYPE } from '../constants'
+import { ACCOUNT_TAG, DATA_TO_SHOW, GENERIC_TICK, FUNDAMENTAL_REPORT_TYPE } from '../constants'
 
 const _defaultIntentConfig = {
 	toCommandParams: (...args) => [ ...args ]

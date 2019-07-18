@@ -65,7 +65,7 @@ export const orderUtils = {
 		action: action,
 		orderType: ORDER_TYPE.MARKET_CLOSE,
 		totalQuantity,
-		transmit
+		transmit: true
 	}),
 	stop: (action, totalQuantity, auxPrice, parentId = 0, tif = 'DAY') => ({
 		action,

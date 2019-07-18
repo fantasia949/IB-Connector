@@ -1,0 +1,28 @@
+env:
+  browser: true
+  es6: true
+  node: true
+plugins:
+  - jest
+extends:
+  - 'eslint:recommended'
+  - 'plugin:jest/recommended'
+parserOptions:
+  sourceType: module
+  ecmaVersion: 2019
+rules:
+  babel/semi: 0
+  indent:
+    - warn
+    - tab
+    - SwitchCase: 1
+  linebreak-style:
+    - error
+    - windows
+  quotes:
+    - error
+    - single
+  semi:
+    - error
+    - never
+  no-console: 0
