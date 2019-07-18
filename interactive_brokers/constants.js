@@ -30,7 +30,8 @@ export const MARKETDATA_EVENT = {
 	FUNDAMENTAL_DATA: 'fundamentalData',
 	SCANNER_PARAMETERS: 'scannerParameters',
 	SCANNER_DATA: 'scannerData',
-	SCANNER_DATA_END: 'scannerDataEnd'
+	SCANNER_DATA_END: 'scannerDataEnd',
+	EXCHANGES: 'mktDepthExchanges'
 }
 export const TRADE_EVENT = {
 	ORDER_OPEN: 'openOrder',
@@ -69,11 +70,11 @@ export const NEWS_EVENT = {
 }
 
 export const EVENT = {
-	OPEN: 'open',
+	OPEN: 'connect',
 	CLOSE: 'close',
 	ERROR: 'error',
-	MESSAGE: 'message',
-	DATA: 'data',
+	MESSAGE: 'data',
+	DATA: 'parsed_data',
 	READY: 'ready',
 	COMMAND_SEND: 'command'
 }
@@ -95,6 +96,7 @@ export const INTENT = {
 	INSTRUMENT_FUNDAMENTAL: 'contract_fundamental',
 	NEWS_ARTICLE: 'news_article',
 	NEWS_PROVIDERS: 'news_providers',
+	EXCHANGES: 'exchanges',
 	HISTORICAL_NEWS: 'historical_news',
 	MATCHING_SYMBOLS: 'matching_symbols',
 	SCANNER_PARAMTERS: 'scanner_parameters',
@@ -121,7 +123,8 @@ export const SUBSCRIPTION_TYPE = {
 	[INTENT.NEWS_PROVIDERS]: 'NewsProviders',
 	[INTENT.MATCHING_SYMBOLS]: 'MatchingSymbols',
 	[INTENT.SCANNER_PARAMTERS]: 'ScannerParameters',
-	[INTENT.SCANNER_SUBSCRIPTION]: 'ScannerSubscription'
+	[INTENT.SCANNER_SUBSCRIPTION]: 'ScannerSubscription',
+	[INTENT.EXCHANGES]: 'MktDepthExchanges'
 }
 
 export const CURRENCIES = [
@@ -150,7 +153,8 @@ export const SECURITY_TYPE = {
 	OPTION: 'opt',
 	INDEX: 'ind',
 	FOP: 'fop',
-	COMMODITY: 'cmdty'
+	COMMODITY: 'cmdty',
+	WARRANT: 'war'
 }
 
 export const SECURITY_TYPES = Object.values(SECURITY_TYPE)

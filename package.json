@@ -1,14 +1,14 @@
 {
   "name": "@fantasia949/ib-connector",
-  "version": "1.0.4",
+  "version": "1.0.8",
   "description": "Interactive Brokers connector",
   "homepage": "https://github.com/fantasia949/IB-Connector",
   "main": "interactive_brokers/index.js",
   "types": "./types.d.ts",
   "dependencies": {
     "eslint-plugin-jest": "^22.10.0",
+    "simple-websocket": "^7.2.0",
     "tern": "^0.24.1",
-    "ws": "^7.1.0",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {

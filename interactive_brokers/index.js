@@ -1,5 +1,5 @@
 import assert from 'assert'
-import WebSocket from 'ws'
+import WebSocket from 'simple-websocket'
 import EventEmitter from 'events'
 import {
 	MARKET_DATA_TYPE,
@@ -40,7 +40,7 @@ const createWs = url => {
  * @property {string} endpoint
  * @property {number=} marketDataType
  * @property {number=} serverLogLevel
- * @property {number=0} isMaster
+ * @property {number=} isMaster
  */
 
 export default class IbConnector extends EventEmitter {
@@ -83,7 +83,7 @@ export default class IbConnector extends EventEmitter {
 
 	get connected () {
 		const socket = this._socket
-		return socket ? socket.readyState === socket.OPEN : false
+		return socket ? socket.connected : false
 	}
 
 	get assets () {
@@ -190,6 +190,14 @@ export default class IbConnector extends EventEmitter {
 		return data
 	}
 
+	async getSupportedExchanges () {
+		const command = makeRequestSubscriptionCommand(INTENT.EXCHANGES, undefined, icFactory.defaultIntentConfig())
+
+		const response = await this._getData(command, MARKETDATA_EVENT.EXCHANGES)
+		const { data } = parseMessage(response)
+		return data
+	}
+
 	async getInstrumentDetails (exSymbol) {
 		const command = makeRequestSubscriptionCommand(
 			INTENT.INSTRUMENT_DETAILS,
@@ -253,7 +261,7 @@ export default class IbConnector extends EventEmitter {
 	/**
 	 * Get open orders
 	 *
-	 * @param {Boolean=false} all
+	 * @param {Boolean=} all
 	 * @memberof IbConnector
 	 * returns Promise<Array>
 	 */
@@ -398,8 +406,7 @@ export default class IbConnector extends EventEmitter {
 
 	_checkConnected (errCb) {
 		const socket = this._socket
-
-		if (!socket || socket.readyState === socket.CLOSED) {
+		if (!socket || !socket.connected) {
 			const message = 'The connection is already closed'
 			if (errCb) {
 				errCb(message)
@@ -412,7 +419,7 @@ export default class IbConnector extends EventEmitter {
 	_checkDisconnected () {
 		const socket = this._socket
 
-		if (socket && socket.readyState === socket.OPEN) {
+		if (socket && socket.connected) {
 			throw new Error('The connection is already opened')
 		}
 	}
@@ -449,7 +456,8 @@ export default class IbConnector extends EventEmitter {
 		let event = undefined
 
 		try {
-			const parsedMessage = parseMessage(message)
+			const parsedMessage = parseMessage(message.toString('utf8'))
+
 			data = parsedMessage.data
 			event = parsedMessage.event
 
@@ -493,7 +501,13 @@ export default class IbConnector extends EventEmitter {
 	_initConnection (config) {
 		const { username, password, isMaster } = this._config
 
-		const query = new URLSearchParams([ [ 'username', username ], [ 'password', password ], [ 'isMaster', isMaster ] ])
+		let params = [ [ 'username', username ], [ 'password', password ] ]
+
+		if (isMaster) {
+			params.push([ 'isMaster', isMaster ])
+		}
+
+		const query = new URLSearchParams(params)
 
 		const url = `${this._getStream(config)}?${query}`
 

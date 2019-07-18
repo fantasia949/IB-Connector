@@ -283,7 +283,17 @@ const dataMapperFunc = {
 	}),
 
 	// ref: http://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a54d829186800287ac87c77a6a38a1917
-	[MARKETDATA_EVENT.SCANNER_DATA_END]: reqIdMappingFunc
+	[MARKETDATA_EVENT.SCANNER_DATA_END]: reqIdMappingFunc,
+
+	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#aaf5ec42d517d013340e52c42209dcefe
+	[MARKETDATA_EVENT.EXCHANGES]: ([ entries ]) =>
+		entries.map(({ exchange, secType, listingExch, serviceDataType, aggGroup }) => ({
+			exchange,
+			secType,
+			listingExch,
+			serviceDataType,
+			aggGroup
+		}))
 }
 
 export const parseMessage = message => {

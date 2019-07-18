@@ -9,7 +9,7 @@ const connectorConfig = {
 	serverLogLevel: SERVER_LOG_LEVEL.DETAIL,
 	// free user must set market data subscription to DELAYED in order to get market data
 	marketDataType: MARKET_DATA_TYPE.DELAYED,
-	isMaster: 1,
+	isMaster: 0,
 	endpoint: 'ws://127.0.0.1:3000'
 }
 
@@ -93,6 +93,11 @@ describe('test IB connector\'s direct call', () => {
 	test('getInstrumentDetails using factory\'s contract.futureOption should have result', async () => {
 		const entry = await ib.getInstrumentDetails(exchangeUtils.futureOption('es', RIGHT_TYPE.PUT, '20200320', 1600))
 		expect(entry).toHaveLength(1)
+	})
+
+	test('getSupportedExchanges should have result', async () => {
+		const entry = await ib.getSupportedExchanges()
+		expect(entry.length > 0).toBeTruthy()
 	})
 
 	afterAll(() => ib.disconnect())
