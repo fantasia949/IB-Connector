@@ -16,7 +16,7 @@ interface IbConnector {
 	 * 
 	 * @param config? 
 	 */
-	new (config?: any)
+	new (config?: any) : void
 
 	/**
 	 * 
