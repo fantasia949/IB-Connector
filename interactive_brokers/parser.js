@@ -54,7 +54,7 @@ const dataMapperFunc = {
 
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a19cb7c5bbd4ab05ccc5f9e686ed07a9e
 	[MARKETDATA_EVENT.TICK_STRING]: ([ reqId, field, value ]) => {
-		const result = { reqId }
+		let result = { reqId }
 
 		if (field === TICK_STRING_FIELD.NEW_FEED) {
 			const [ articleId, time, providerCode, ...content ] = value.split(' ')
@@ -147,7 +147,7 @@ const dataMapperFunc = {
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a17f2a02d6449710b6394d0266a353313
 	[TRADE_EVENT.ORDER_STATUS]: (
 		[ orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice ]
-	) => ({ orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice }),
+	) => ({ orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice, intent: INTENT.OPEN_ORDERS }),
 
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#af4105e2dae9efd6f6bb56f706374c9d6
 	[TRADE_EVENT.POSITION]: ([ account, contract, pos, avgCost ]) => ({
@@ -302,7 +302,7 @@ export const parseMessage = message => {
 
 	const func = dataMapperFunc[event]
 
-	if (!func) {
+	if (typeof(func) !== 'function') {
 		return { event, data }
 	}
 

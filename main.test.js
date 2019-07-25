@@ -100,5 +100,10 @@ describe('test IB connector\'s direct call', () => {
 		expect(entry.length > 0).toBeTruthy()
 	})
 
+	test('getAccountBalance should have result', async () => {
+		const entry = await ib.getAccountBalance()
+		expect(entry).toBeDefined()
+	})
+
 	afterAll(() => ib.disconnect())
 })

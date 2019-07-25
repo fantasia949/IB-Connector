@@ -10,7 +10,8 @@ import {
 	MARKETDATA_EVENT,
 	GENERIC_TICK,
 	SERVER_LOG_LEVEL,
-	SECURITY_TYPES
+	SECURITY_TYPES,
+	ACCOUNT_EVENT
 } from './constants'
 import { parseMessage } from './parser'
 import {
@@ -20,6 +21,7 @@ import {
 	makeCancelOrderCommand
 } from './commandFactory'
 import * as icFactory from './intentConfig/factory'
+import { defer } from './utils'
 
 const createWs = url => {
 	const socket = new WebSocket(url)
@@ -110,20 +112,24 @@ export default class IbConnector extends EventEmitter {
 	subscribe (intent, config, cb) {
 		this._checkConnected()
 
+		let reqId = undefined
+		let message = undefined
+
 		if (intent === INTENT.LIVE_PORTFOLIO) {
-			const message = makeRequestSubscriptionCommand(intent, true, icFactory.portfolioConfig(this.account))
-			this._sendCommand(message)
-			this._responseHandlers[intent] = cb
-			return
+			message = makeRequestSubscriptionCommand(intent, true, icFactory.portfolioConfig(this.account))
+		} else {
+			reqId = this._socket.getReqId()
+			message = makeRequestSubscriptionCommand(intent, reqId, config)
 		}
 
-		const reqId = this._socket.getReqId()
-
-		const message = makeRequestSubscriptionCommand(intent, reqId, config)
 		this._sendCommand(message)
 
 		if (typeof cb === 'function') {
-			this._responseHandlers[reqId] = cb
+			let key = [ INTENT.OPEN_ORDERS, INTENT.LIVE_PORTFOLIO ].includes(intent) ? intent : reqId
+			if (intent === INTENT.ALL_OPEN_ORDERS) {
+				key = INTENT.OPEN_ORDERS
+			}
+			this._responseHandlers[key] = cb
 		}
 
 		return reqId
@@ -139,24 +145,19 @@ export default class IbConnector extends EventEmitter {
 	unsubscribe (intent, reqId) {
 		this._checkConnected()
 
+		let message = undefined
+
 		if (intent === INTENT.LIVE_PORTFOLIO) {
-			const message = makeRequestSubscriptionCommand(intent, false, icFactory.portfolioConfig(this.account))
-			this._sendCommand(message)
-
-			if (this._responseHandlers[intent]) {
-				this._responseHandlers[intent] = undefined
-			}
-
-			return
+			message = makeRequestSubscriptionCommand(intent, false, icFactory.portfolioConfig(this.account))
+		} else {
+			assert(reqId, 'reqId is required to cancel this intent subscription')
+			message = makeCancelSubscriptionCommand(intent, reqId)
 		}
 
-		assert(reqId, 'reqId is required to cancel this intent subscription')
-
-		const message = makeCancelSubscriptionCommand(intent, reqId)
 		this._sendCommand(message)
 
-		if (this._responseHandlers[reqId]) {
-			this._responseHandlers[reqId] = undefined
+		if (this._responseHandlers[reqId || intent]) {
+			this._responseHandlers[reqId || intent] = undefined
 		}
 	}
 
@@ -188,6 +189,42 @@ export default class IbConnector extends EventEmitter {
 		const response = await this._getData(command, NEWS_EVENT.NEWS_ARTICLE)
 		const { data } = parseMessage(response)
 		return data
+	}
+
+	async getAccountSummary (tags) {
+		const command = makeRequestSubscriptionCommand(
+			INTENT.LIVE_ACCOUNT_SUMMARY,
+			this._socket.getReqId(),
+			icFactory.accountSummaryConfig(undefined, tags)
+		)
+
+		const response = await this._getData(
+			command,
+			ACCOUNT_EVENT.ACCOUNT_SUMMARY_END,
+			[ ACCOUNT_EVENT.ACCOUNT_SUMMARY ],
+			(result, data, event) => {
+				const field = parseMessage({ data, event })
+				const { value, tag } = field.data
+				result[tag] = value
+				return result
+			},
+			{}
+		)
+		const { data } = parseMessage(response)
+		return data
+	}
+
+	async getPortfolio () {
+		const entries = []
+		this.subscribe(INTENT.LIVE_PORTFOLIO, icFactory.defaultIntentConfig(), (_, entry, event) => {
+			if (event === ACCOUNT_EVENT.UPDATE_PORTFOLIO) {
+				entries.push(entry)
+			}
+		})
+		await defer(2000)
+		this.unsubscribe(INTENT.LIVE_PORTFOLIO)
+
+		return entries
 	}
 
 	async getSupportedExchanges () {
@@ -274,8 +311,25 @@ export default class IbConnector extends EventEmitter {
 		const response = await this._getData(
 			command,
 			TRADE_EVENT.ORDER_OPEN_END,
-			[ TRADE_EVENT.ORDER_OPEN ],
-			(result, data, event) => [ ...result, parseMessage({ event, data }).data ],
+			[ TRADE_EVENT.ORDER_OPEN, TRADE_EVENT.ORDER_STATUS ],
+			(orders, data, event) => {
+				const entry = parseMessage({ data, event }).data
+				if (event === TRADE_EVENT.ORDER_OPEN) {
+					const order = mapToOrder(entry)
+					const index = orders.findIndex(({ orderId }) => orderId === order.orderId)
+					if (index >= 0) {
+						orders[index] = order
+					} else {
+						orders.push(order)
+					}
+				} else if (event === TRADE_EVENT.ORDER_STATUS) {
+					const index = orders.findIndex(({ orderId }) => orderId === entry.orderId)
+					const { remaining, filled, status } = entry
+					Object.assign(orders[index], { remaining, filled, status })
+				}
+
+				return orders
+			},
 			[]
 		)
 
@@ -424,7 +478,7 @@ export default class IbConnector extends EventEmitter {
 		}
 	}
 
-	_getData (command, completeEvent, acumulateEvents = [], onAcumulate, initialAcumulatedData) {
+	_getData (command, completeEvent, acumulateEvents = [], onAcumulate, initialAcumulatedData, done) {
 		return new Promise((resolve, reject) => {
 			try {
 				this._sendCommand(command)
@@ -444,10 +498,21 @@ export default class IbConnector extends EventEmitter {
 				)
 			})
 
-			this._onceMessageEvent(completeEvent, (data, event) => {
+			const onFinished = (data, event) => {
 				resolve({ data: acumulateEvents.length ? acumulatedData : data, event })
 				offEvents.forEach(off => off())
-			})
+				if (typeof done === 'function') {
+					try {
+						done()
+					} catch (err) {}
+				}
+			}
+
+			if (completeEvent instanceof Promise) {
+				completeEvent.then(() => onFinished(acumulatedData))
+			} else {
+				this._onceMessageEvent(completeEvent, onFinished)
+			}
 		})
 	}
 
@@ -555,3 +620,21 @@ export default class IbConnector extends EventEmitter {
 		return this._config.endpoint
 	}
 }
+
+const mapToOrder = ({
+	orderId,
+	contract: { symbol, currency, secType },
+	order: { lmtPrice, totalQuantity },
+	orderState: { status, commission }
+}) => ({
+	orderId,
+	symbol,
+	currency,
+	secType,
+	price: lmtPrice,
+	totalQuantity,
+	status,
+	remaining: undefined,
+	filled: undefined,
+	commission: commission === Number.MAX_VALUE ? 0 : commission
+})

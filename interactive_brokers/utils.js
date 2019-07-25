@@ -193,4 +193,6 @@ export const makeContract = input => {
 	return contract
 }
 
-export const reqIdMappingFunc = ([ reqId ]) => ({ reqId })
+export const reqIdMappingFunc = (reqId) => Array.isArray(reqId) ? { reqId: reqId[0] } : { reqId }
+
+export const defer = miliseconds => new Promise(resolve => setTimeout(resolve, miliseconds))

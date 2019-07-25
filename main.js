@@ -68,6 +68,8 @@ const main = async () => {
 
 	// testPortfolio(ib)
 
+
+	// await ib.getAccountSummary()
 	// await testWatchlistSnapshot(ib, facebookSymbol)
 	// await testNewsProviders(ib)
 	// await testNewsArticle(ib, 'BRFG', 'BRFG$0af99099')
