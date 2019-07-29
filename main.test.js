@@ -1,7 +1,7 @@
 import { MARKET_DATA_TYPE, SERVER_LOG_LEVEL, RIGHT_TYPE } from './interactive_brokers/constants'
 import IbConnector from './interactive_brokers'
 import { EVENT } from './interactive_brokers/constants'
-import { exchangeUtils } from './interactive_brokers/utils'
+import { exchangeUtils, defer } from './interactive_brokers/utils'
 
 const connectorConfig = {
 	username: 'hxvn0001',
@@ -20,7 +20,10 @@ ib.on(EVENT.COMMAND_SEND, message => console.log(JSON.stringify(message)))
 const facebookSymbol = 'fb'
 
 describe('test IB connector\'s direct call', () => {
-	beforeAll(() => ib.connect({ uuid: 'fb' }))
+	beforeAll(async () => {
+		await ib.connect({ uuid: 'fb' })
+		await defer(300)
+	})
 
 	test('connected should be true', async () => {
 		expect(ib.connected).toBeTruthy()

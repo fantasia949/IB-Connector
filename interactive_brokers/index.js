@@ -71,6 +71,8 @@ export default class IbConnector extends EventEmitter {
 		}
 
 		this._responseHandlers = {}
+		this._orders = undefined
+		this._allOrdersMode = false
 	}
 
 	setMarketDataType (marketDataType) {
@@ -117,12 +119,16 @@ export default class IbConnector extends EventEmitter {
 
 		if (intent === INTENT.LIVE_PORTFOLIO) {
 			message = makeRequestSubscriptionCommand(intent, true, icFactory.portfolioConfig(this.account))
+		} else if (intent === INTENT.OPEN_ORDERS) {
+			// order events are registered by default, no need to register
 		} else {
 			reqId = this._socket.getReqId()
 			message = makeRequestSubscriptionCommand(intent, reqId, config)
 		}
-
-		this._sendCommand(message)
+		
+		if (message) {
+			this._sendCommand(message)
+		}
 
 		if (typeof cb === 'function') {
 			let key = [ INTENT.OPEN_ORDERS, INTENT.LIVE_PORTFOLIO ].includes(intent) ? intent : reqId
@@ -306,34 +312,14 @@ export default class IbConnector extends EventEmitter {
 		if (all && !this._config.isMaster) {
 			throw new Error('Only show all orders if the client is master client')
 		}
+		if (this._allOrdersMode !== all) {
+			this._orders = undefined
+			this._allOrdersMode = all
+			const command = makeRequestSubscriptionCommand(all ? INTENT.ALL_OPEN_ORDERS : INTENT.OPEN_ORDERS)
+			await this._getData(command, TRADE_EVENT.ORDER_OPEN_END)
+		}
 
-		const command = makeRequestSubscriptionCommand(all ? INTENT.ALL_OPEN_ORDERS : INTENT.OPEN_ORDERS)
-		const response = await this._getData(
-			command,
-			TRADE_EVENT.ORDER_OPEN_END,
-			[ TRADE_EVENT.ORDER_OPEN, TRADE_EVENT.ORDER_STATUS ],
-			(orders, data, event) => {
-				const entry = parseMessage({ data, event }).data
-				if (event === TRADE_EVENT.ORDER_OPEN) {
-					const order = mapToOrder(entry)
-					const index = orders.findIndex(({ orderId }) => orderId === order.orderId)
-					if (index >= 0) {
-						orders[index] = order
-					} else {
-						orders.push(order)
-					}
-				} else if (event === TRADE_EVENT.ORDER_STATUS) {
-					const index = orders.findIndex(({ orderId }) => orderId === entry.orderId)
-					const { remaining, filled, status } = entry
-					Object.assign(orders[index], { remaining, filled, status })
-				}
-
-				return orders
-			},
-			[]
-		)
-
-		return response.data
+		return this._orders || []
 	}
 
 	async getCompletedOrders () {
@@ -354,7 +340,7 @@ export default class IbConnector extends EventEmitter {
 	 *
 	 * @param {string} exSymbol
 	 * @param {OrderConfig} orderConfig
-	 * @returns {number} orderId
+	 * @returns {Object} order
 	 * @memberof IbConnector
 	 */
 	async placeOrder (exSymbol, orderConfig) {
@@ -363,23 +349,23 @@ export default class IbConnector extends EventEmitter {
 			args: [ 1 ]
 		}
 
-		const { data } = await this._getData(getOrderICommand, TRADE_EVENT.NEXT_ORDER_ID)
-		const [ orderId ] = data
-
-		const message = makePlaceOrderCommand(orderId, exSymbol, orderConfig)
-		this._sendCommand(message)
-
-		return orderId
+		const message = await this._getData(getOrderICommand, TRADE_EVENT.NEXT_ORDER_ID)
+		const { orderId } = parseMessage(message).data
+		const command = makePlaceOrderCommand(orderId, exSymbol, orderConfig)
+		await this._getData(command, TRADE_EVENT.ORDER_STATUS)
+		return this._orders.find(order => order.orderId === orderId)
 	}
 
 	/**
 	 * Cancel an order
 	 *
 	 * @param {string} orderId
+	 * @returns {Object} order
 	 */
-	cancelOrder (orderId) {
-		const message = makeCancelOrderCommand(orderId)
-		this._sendCommand(message)
+	async cancelOrder (orderId) {
+		const command = makeCancelOrderCommand(orderId)
+		await this._getData(command, TRADE_EVENT.ORDER_STATUS)
+		return this._orders.find(order => order.orderId === orderId)
 	}
 
 	/**
@@ -453,6 +439,8 @@ export default class IbConnector extends EventEmitter {
 
 			this._responseHandlers = {}
 			this._socket = undefined
+			this._orders = undefined
+			this._allOrdersMode = false
 
 			setTimeout(resolve)
 		})
@@ -530,6 +518,8 @@ export default class IbConnector extends EventEmitter {
 				this.emit(EVENT.ERROR, uuid, data)
 				return
 			}
+
+			this._handleOrderEvents(event, data)
 
 			// inprocessed result is either undefined or array
 			if (!data || Array.isArray(data)) {
@@ -619,6 +609,33 @@ export default class IbConnector extends EventEmitter {
 	_getStream () {
 		return this._config.endpoint
 	}
+
+	_handleOrderEvents (event, data) {
+		if ((event === TRADE_EVENT.ORDER_OPEN || event === TRADE_EVENT.ORDER_STATUS) && this._orders === undefined) {
+			this._orders = []
+		}
+
+		const orders = this._orders
+
+		if (event === TRADE_EVENT.ORDER_OPEN) {
+			const order = mapToOrder(data)
+			const index = orders.findIndex(({ orderId }) => orderId === order.orderId)
+			if (index >= 0) {
+				orders[index] = order
+			} else {
+				orders.push(order)
+			}
+		} else if (event === TRADE_EVENT.ORDER_STATUS) {
+			const index = orders.findIndex(({ orderId }) => orderId === data.orderId)
+
+			if (index === -1) {
+				return
+			}
+
+			const { remaining, filled, status } = data
+			Object.assign(orders[index], { remaining, filled, status })
+		}
+	}
 }
 
 const mapToOrder = ({
@@ -631,10 +648,12 @@ const mapToOrder = ({
 	symbol,
 	currency,
 	secType,
-	price: lmtPrice,
+	price: getValueOrDefault(lmtPrice, 0),
 	totalQuantity,
 	status,
 	remaining: undefined,
 	filled: undefined,
-	commission: commission === Number.MAX_VALUE ? 0 : commission
+	commission: getValueOrDefault(commission, 0)
 })
+
+const getValueOrDefault = (value, defaultValue) => (value === Number.MAX_VALUE || value === undefined ? 0 : defaultValue)

@@ -118,11 +118,8 @@ interface IbConnector {
 	 * 
 	 * @param {string} exSymbol
 	 * @param {OrderConfig} orderConfig
-	 * @returns {number} orderId
+	 * @returns {Promise<number>} orderId
 	 * @memberof IbConnector
-	 * @param exSymbol 
-	 * @param orderConfig 
-	 * @return  
 	 */
 	placeOrder(exSymbol: string, orderConfig: any): number
 

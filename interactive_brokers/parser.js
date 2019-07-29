@@ -133,6 +133,8 @@ const dataMapperFunc = {
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a715bb6750de66a0e072a910e697e20cf
 	[MARKETDATA_EVENT.HISTORICAL_DATA_END]: ([ reqId, start, end ]) => ({ reqId, start, end }),
 
+	[TRADE_EVENT.NEXT_ORDER_ID]: ([ orderId ]) => ({ orderId }),
+
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#aa05258f1d005accd3efc0d60bc151407
 	[TRADE_EVENT.ORDER_OPEN]: ([ orderId, contract, order, orderState ]) => ({
 		orderId,
@@ -147,7 +149,20 @@ const dataMapperFunc = {
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#a17f2a02d6449710b6394d0266a353313
 	[TRADE_EVENT.ORDER_STATUS]: (
 		[ orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice ]
-	) => ({ orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice, intent: INTENT.OPEN_ORDERS }),
+	) => ({
+		orderId,
+		status,
+		filled,
+		remaining,
+		avgFillPrice,
+		permId,
+		parentId,
+		lastFillPrice,
+		clientId,
+		whyHeld,
+		mktCapPrice,
+		intent: INTENT.OPEN_ORDERS
+	}),
 
 	// ref: https://interactivebrokers.github.io/tws-api/interfaceIBApi_1_1EWrapper.html#af4105e2dae9efd6f6bb56f706374c9d6
 	[TRADE_EVENT.POSITION]: ([ account, contract, pos, avgCost ]) => ({
@@ -302,7 +317,7 @@ export const parseMessage = message => {
 
 	const func = dataMapperFunc[event]
 
-	if (typeof(func) !== 'function') {
+	if (typeof func !== 'function') {
 		return { event, data }
 	}
 

@@ -1,6 +1,6 @@
 {
   "name": "@fantasia949/ib-connector",
-  "version": "1.0.13",
+  "version": "1.0.19",
   "description": "Interactive Brokers connector",
   "homepage": "https://github.com/fantasia949/IB-Connector",
   "main": "interactive_brokers/index.js",

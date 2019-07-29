@@ -12,7 +12,7 @@ import {
 } from './interactive_brokers/constants'
 
 import * as icFactory from './interactive_brokers/intentConfig/factory'
-import { orderUtils } from './interactive_brokers/utils'
+import { orderUtils, defer } from './interactive_brokers/utils'
 
 export const initIb = () => {
 	const connectorConfig = {
@@ -21,7 +21,7 @@ export const initIb = () => {
 		serverLogLevel: SERVER_LOG_LEVEL.DETAIL,
 		// free user must set market data subscription to DELAYED in order to get market data
 		marketDataType: MARKET_DATA_TYPE.DELAYED,
-		isMaster: 1,
+		// isMaster: 1,
 		endpoint: 'ws://127.0.0.1:3000'
 	}
 
@@ -45,6 +45,7 @@ const main = async () => {
 	// ib.on(EVENT.DATA, (uuid, data, event) => console.log(uuid, 'global', data, event))
 
 	await ib.connect({ uuid: 'fb' })
+	await defer(500) // wait a bit to get all initial events
 	// setTimeout(() => ib.disconnect(), 40 * 1000)
 
 	// testWatchlist(ib, facebookSymbol)
@@ -67,7 +68,6 @@ const main = async () => {
 	setTimeout(() => testGetOpenOrders(ib), 3000)
 
 	// testPortfolio(ib)
-
 
 	// await ib.getAccountSummary()
 	// await testWatchlistSnapshot(ib, facebookSymbol)
@@ -170,7 +170,7 @@ const testPositions = ib => {
 }
 
 const testGetOpenOrders = async ib => {
-	const orders = await ib.getOpenOrders({ all: true })
+	const orders = await ib.getOpenOrders()
 	console.log(orders)
 }
 
@@ -180,8 +180,9 @@ const testCompletedOrders = async ib => {
 }
 
 const testTrading = async (ib, symbol) => {
-	const orderId = await ib.placeOrder(symbol, orderUtils.limit(ORDER_ACTION.BUY, 1, 0.1))
-	setTimeout(() => ib.cancelOrder(orderId), 12 * 1000)
+	const order = await ib.placeOrder(symbol, orderUtils.limit(ORDER_ACTION.BUY, 20000, 0.1))
+	console.log(order)
+	setTimeout(() => ib.cancelOrder(order.orderId), 12 * 1000)
 }
 
 const testPortfolio = ib => {
