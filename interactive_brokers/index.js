@@ -641,7 +641,7 @@ export default class IbConnector extends EventEmitter {
 const mapToOrder = ({
 	orderId,
 	contract: { symbol, currency, secType },
-	order: { lmtPrice, totalQuantity },
+	order: { lmtPrice, totalQuantity, orderType },
 	orderState: { status, commission }
 }) => ({
 	orderId,
@@ -651,6 +651,7 @@ const mapToOrder = ({
 	price: getValueOrDefault(lmtPrice, 0),
 	totalQuantity,
 	status,
+	orderType,
 	remaining: undefined,
 	filled: undefined,
 	commission: getValueOrDefault(commission, 0)
