@@ -45,58 +45,62 @@ export const exchangeUtils = {
 	futureOption: (exSymbol, right, expiry, strike) => new FutureOptionExchange(exSymbol, right, expiry, strike)
 }
 
+// ref: https://interactivebrokers.github.io/tws-api/basic_orders.html
 export const orderUtils = {
+	_defaultConfig: {
+		transmit: true
+	},
+	allowOutsideRth: order => Object.assign(order, { outsideRth: true }),
 	limit: (action, totalQuantity, price) => ({
+		...orderUtils._defaultConfig,
 		action: action,
 		lmtPrice: price,
 		orderType: ORDER_TYPE.LIMIT,
-		totalQuantity,
-		transmit: true
+		totalQuantity
 	}),
 	market: (action, totalQuantity, goodAfterTime = '', goodTillDate = '') => ({
+		...orderUtils._defaultConfig,
 		action: action,
 		orderType: ORDER_TYPE.MARKET,
 		totalQuantity,
-		transmit: true,
 		goodAfterTime,
 		goodTillDate
 	}),
 	marketClose: (action, totalQuantity) => ({
+		...orderUtils._defaultConfig,
 		action: action,
 		orderType: ORDER_TYPE.MARKET_CLOSE,
-		totalQuantity,
-		transmit: true
+		totalQuantity
 	}),
 	stop: (action, totalQuantity, auxPrice, parentId = 0, tif = 'DAY') => ({
+		...orderUtils._defaultConfig,
 		action,
 		auxPrice,
 		orderType: ORDER_TYPE.STOP,
 		totalQuantity,
-		transmit: true,
 		parentId,
 		tif
 	}),
 	stopLimit: (action, totalQuantity, lmtPrice, auxPrice, parentId = 0, tif = 'DAY') => ({
+		...orderUtils._defaultConfig,
 		action,
 		lmtPrice,
 		auxPrice,
 		orderType: ORDER_TYPE.STOP_LIMIT,
 		totalQuantity,
-		transmit: true,
 		parentId,
 		tif
 	}),
 	trailingStop: (action, totalQuantity, auxPrice, parentId = 0, tif = 'DAY') => ({
+		...orderUtils._defaultConfig,
 		action,
 		totalQuantity,
 		orderType: ORDER_TYPE.TRAILING_STOP,
 		auxPrice,
 		tif,
-		transmit: true,
 		parentId
 	})
 }
-
 export const makeContract = input => {
 	const DEFAULT_CURRENCY = 'USD'
 	const DEFAULT_EXCHANGE = 'SMART'
@@ -193,6 +197,6 @@ export const makeContract = input => {
 	return contract
 }
 
-export const reqIdMappingFunc = (reqId) => Array.isArray(reqId) ? { reqId: reqId[0] } : { reqId }
+export const reqIdMappingFunc = reqId => (Array.isArray(reqId) ? { reqId: reqId[0] } : { reqId })
 
 export const defer = miliseconds => new Promise(resolve => setTimeout(resolve, miliseconds))

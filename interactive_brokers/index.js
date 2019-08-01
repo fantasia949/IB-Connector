@@ -25,6 +25,7 @@ import { defer } from './utils'
 
 const createWs = url => {
 	const socket = new WebSocket(url)
+	socket.setMaxListeners(200)
 	Object.assign(socket, {
 		_reqId: 1,
 		getReqId: function () {
@@ -54,9 +55,9 @@ export default class IbConnector extends EventEmitter {
 	constructor (config = {}) {
 		super()
 
-		const { username, password, endpoint, marketDataType, serverLogLevel } = config
+		const { endpoint, marketDataType, serverLogLevel } = config
 
-		assert(username && password && endpoint, 'config is invalid. { username, password, endpoint } are required')
+		assert(endpoint, 'config is invalid. { endpoint } is required')
 
 		this._config = config
 
@@ -125,7 +126,7 @@ export default class IbConnector extends EventEmitter {
 			reqId = this._socket.getReqId()
 			message = makeRequestSubscriptionCommand(intent, reqId, config)
 		}
-		
+
 		if (message) {
 			this._sendCommand(message)
 		}
@@ -220,17 +221,23 @@ export default class IbConnector extends EventEmitter {
 		return data
 	}
 
-	async getPortfolio () {
-		const entries = []
-		this.subscribe(INTENT.LIVE_PORTFOLIO, icFactory.defaultIntentConfig(), (_, entry, event) => {
-			if (event === ACCOUNT_EVENT.UPDATE_PORTFOLIO) {
-				entries.push(entry)
-			}
-		})
-		await defer(2000)
-		this.unsubscribe(INTENT.LIVE_PORTFOLIO)
+	getPortfolio () {
+		return Promise.race(
+			new Promise(resolve => {
+				const entries = []
 
-		return entries
+				this.subscribe(INTENT.LIVE_PORTFOLIO, icFactory.defaultIntentConfig(), (_, entry, event) => {
+					if (event === ACCOUNT_EVENT.UPDATE_PORTFOLIO) {
+						entries.push(entry)
+					}
+					if (event === ACCOUNT_EVENT.ACCOUNT_DOWNLOAD_END) {
+						this.unsubscribe(INTENT.LIVE_PORTFOLIO)
+						resolve(entries)
+					}
+				})
+			}),
+			defer(5000)
+		)
 	}
 
 	async getSupportedExchanges () {
@@ -371,6 +378,8 @@ export default class IbConnector extends EventEmitter {
 	/**
  * @typedef ConnectConfig
  * @property {string} uuid
+ * @property {string=} username
+ * @property {string=} password
  */
 
 	/**
@@ -435,7 +444,7 @@ export default class IbConnector extends EventEmitter {
 			this._checkConnected(reject)
 
 			const socket = this._socket
-			socket.close()
+			socket.destroy()
 
 			this._responseHandlers = {}
 			this._socket = undefined
@@ -447,8 +456,7 @@ export default class IbConnector extends EventEmitter {
 	}
 
 	_checkConnected (errCb) {
-		const socket = this._socket
-		if (!socket || !socket.connected) {
+		if (!this.connected) {
 			const message = 'The connection is already closed'
 			if (errCb) {
 				errCb(message)
@@ -459,9 +467,7 @@ export default class IbConnector extends EventEmitter {
 	}
 
 	_checkDisconnected () {
-		const socket = this._socket
-
-		if (socket && socket.connected) {
+		if (this.connected) {
 			throw new Error('The connection is already opened')
 		}
 	}
@@ -554,7 +560,18 @@ export default class IbConnector extends EventEmitter {
 	}
 
 	_initConnection (config) {
-		const { username, password, isMaster } = this._config
+		let { username, password, isMaster, endpoint } = this._config
+
+		if (config.username) {
+			username = config.username
+		}
+
+		if (config.password) {
+			password = config.password
+		}
+
+		assert(username, 'username is required')
+		assert(password, 'password is required')
 
 		let params = [ [ 'username', username ], [ 'password', password ] ]
 
@@ -564,7 +581,7 @@ export default class IbConnector extends EventEmitter {
 
 		const query = new URLSearchParams(params)
 
-		const url = `${this._getStream(config)}?${query}`
+		const url = `${endpoint}?${query}`
 
 		return createWs(url)
 	}
@@ -606,9 +623,6 @@ export default class IbConnector extends EventEmitter {
 
 		socket.on(EVENT.MESSAGE, onMessage)
 	}
-	_getStream () {
-		return this._config.endpoint
-	}
 
 	_handleOrderEvents (event, data) {
 		if ((event === TRADE_EVENT.ORDER_OPEN || event === TRADE_EVENT.ORDER_STATUS) && this._orders === undefined) {
@@ -641,14 +655,16 @@ export default class IbConnector extends EventEmitter {
 const mapToOrder = ({
 	orderId,
 	contract: { symbol, currency, secType },
-	order: { lmtPrice, totalQuantity, orderType },
+	order: { lmtPrice, auxPrice, totalQuantity, orderType, action },
 	orderState: { status, commission }
 }) => ({
 	orderId,
 	symbol,
+	action,
 	currency,
 	secType,
 	price: getValueOrDefault(lmtPrice, 0),
+	auxPrice: getValueOrDefault(auxPrice, 0),
 	totalQuantity,
 	status,
 	orderType,
