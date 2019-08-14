@@ -43,7 +43,7 @@ const createWs = url => {
  * @property {string} endpoint
  * @property {number=} marketDataType
  * @property {number=} serverLogLevel
- * @property {number=} isMaster
+ * @property {number=} clientId
  */
 
 export default class IbConnector extends EventEmitter {
@@ -79,11 +79,25 @@ export default class IbConnector extends EventEmitter {
 	setMarketDataType (marketDataType) {
 		assert(Object.values(MARKET_DATA_TYPE).includes(marketDataType), 'marketDataType is invalid')
 		this._marketDataType = marketDataType
+
+		if (this.connected) {
+			this._sendCommand({
+				command: 'reqMarketDataType',
+				args: [ marketDataType ]
+			})
+		}
 	}
 
 	setServerLogLevel (serverLogLevel) {
 		assert(Object.values(SERVER_LOG_LEVEL).includes(serverLogLevel), 'serverLogLevel is invalid')
 		this._serverLogLevel = serverLogLevel
+
+		if (this.connected) {
+			this._sendCommand({
+				command: 'setServerLogLevel',
+				args: [ serverLogLevel ]
+			})
+		}
 	}
 
 	get connected () {
@@ -119,7 +133,7 @@ export default class IbConnector extends EventEmitter {
 		let message = undefined
 
 		if (intent === INTENT.LIVE_PORTFOLIO) {
-			message = makeRequestSubscriptionCommand(intent, true, icFactory.portfolioConfig(this.account))
+			message = makeRequestSubscriptionCommand(intent, true, icFactory.portfolioConfig(this._account))
 		} else if (intent === INTENT.OPEN_ORDERS) {
 			// order events are registered by default, no need to register
 		} else {
@@ -155,7 +169,7 @@ export default class IbConnector extends EventEmitter {
 		let message = undefined
 
 		if (intent === INTENT.LIVE_PORTFOLIO) {
-			message = makeRequestSubscriptionCommand(intent, false, icFactory.portfolioConfig(this.account))
+			message = makeRequestSubscriptionCommand(intent, false, icFactory.portfolioConfig(this._account))
 		} else {
 			assert(reqId, 'reqId is required to cancel this intent subscription')
 			message = makeCancelSubscriptionCommand(intent, reqId)
@@ -184,6 +198,13 @@ export default class IbConnector extends EventEmitter {
 		const response = await this._getData(command, MARKETDATA_EVENT.SYMBOL_SAMPLES)
 		const { data } = parseMessage(response)
 		return data.entries
+	}
+
+	async getMarketRule (marketRuleId) {
+		const command = makeRequestSubscriptionCommand(INTENT.MARKET_RULE, marketRuleId)
+		const response = await this._getData(command, MARKETDATA_EVENT.MARKET_RULE)
+		const { data } = parseMessage(response)
+		return data
 	}
 
 	async getNewsArticle (providerCode, articleId) {
@@ -316,7 +337,7 @@ export default class IbConnector extends EventEmitter {
 	 * returns Promise<Array>
 	 */
 	async getOpenOrders (all) {
-		if (all && !this._config.isMaster) {
+		if (all && this._config.clientId === 0) {
 			throw new Error('Only show all orders if the client is master client')
 		}
 		if (this._allOrdersMode !== all) {
@@ -402,8 +423,16 @@ export default class IbConnector extends EventEmitter {
 
 			this._socket = socket
 
+			const onErrorMessage = (message) => {
+				const { event, data } = JSON.parse(message)
+				if (event === EVENT.ERROR) {
+					reject(new Error(data))
+				}
+			}
+
 			this._onceMessageEvent(EVENT.READY, account => {
-				this.account = account
+				this._account = account
+				this._orders = []
 
 				if (this._marketDataType !== undefined) {
 					this._sendCommand({
@@ -420,10 +449,14 @@ export default class IbConnector extends EventEmitter {
 				}
 
 				socket.off(EVENT.ERROR, reject)
+				socket.off(EVENT.DATA, onErrorMessage)
+				socket.off(EVENT.CLOSE, reject)
 				resolve(this)
 			})
 
 			socket.once(EVENT.ERROR, reject)
+			socket.once(EVENT.CLOSE, reject)
+			socket.once(EVENT.MESSAGE, onErrorMessage)
 
 			socket.on(EVENT.MESSAGE, message => this._onMessage(message, config))
 
@@ -473,6 +506,8 @@ export default class IbConnector extends EventEmitter {
 	}
 
 	_getData (command, completeEvent, acumulateEvents = [], onAcumulate, initialAcumulatedData, done) {
+		const TIMEOUT_SECONDS = 3
+
 		return new Promise((resolve, reject) => {
 			try {
 				this._sendCommand(command)
@@ -481,6 +516,7 @@ export default class IbConnector extends EventEmitter {
 			}
 
 			let offEvents = []
+			let timeoutId = undefined
 
 			let acumulatedData = initialAcumulatedData
 
@@ -493,6 +529,10 @@ export default class IbConnector extends EventEmitter {
 			})
 
 			const onFinished = (data, event) => {
+				if (timeoutId) {
+					clearTimeout(timeoutId)
+					timeoutId = undefined
+				}
 				resolve({ data: acumulateEvents.length ? acumulatedData : data, event })
 				offEvents.forEach(off => off())
 				if (typeof done === 'function') {
@@ -506,6 +546,13 @@ export default class IbConnector extends EventEmitter {
 				completeEvent.then(() => onFinished(acumulatedData))
 			} else {
 				this._onceMessageEvent(completeEvent, onFinished)
+
+				timeoutId = setTimeout(() => {
+					if (this._socket) {
+						this._socket.off(completeEvent, onFinished)
+						onFinished(undefined, EVENT.TIMEOUT)
+					}
+				}, TIMEOUT_SECONDS * 1000)
 			}
 		})
 	}
@@ -560,7 +607,7 @@ export default class IbConnector extends EventEmitter {
 	}
 
 	_initConnection (config) {
-		let { username, password, isMaster, endpoint } = this._config
+		let { username, password, clientId, endpoint } = this._config
 
 		if (config.username) {
 			username = config.username
@@ -575,8 +622,8 @@ export default class IbConnector extends EventEmitter {
 
 		let params = [ [ 'username', username ], [ 'password', password ] ]
 
-		if (isMaster) {
-			params.push([ 'isMaster', isMaster ])
+		if (clientId) {
+			params.push([ 'clientId', clientId ])
 		}
 
 		const query = new URLSearchParams(params)
@@ -599,9 +646,13 @@ export default class IbConnector extends EventEmitter {
 		const socket = this._socket
 
 		const onMessage = message => {
-			const { event, data } = JSON.parse(message)
-			if (event === eventName) {
-				cb(data, eventName)
+			try {
+				const { event, data } = JSON.parse(message)
+				if (event === eventName) {
+					cb(data, eventName)
+				}
+			} catch (err) {
+				console.error(err)
 			}
 		}
 

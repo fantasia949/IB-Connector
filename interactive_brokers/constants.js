@@ -31,7 +31,8 @@ export const MARKETDATA_EVENT = {
 	SCANNER_PARAMETERS: 'scannerParameters',
 	SCANNER_DATA: 'scannerData',
 	SCANNER_DATA_END: 'scannerDataEnd',
-	EXCHANGES: 'mktDepthExchanges'
+	EXCHANGES: 'mktDepthExchanges',
+	MARKET_RULE: 'marketRule'
 }
 export const TRADE_EVENT = {
 	ORDER_OPEN: 'openOrder',
@@ -76,7 +77,8 @@ export const EVENT = {
 	MESSAGE: 'data',
 	DATA: 'parsed_data',
 	READY: 'ready',
-	COMMAND_SEND: 'command'
+	COMMAND_SEND: 'command',
+	TIMEOUT: 'timeout'
 }
 
 export const INTENT = {
@@ -99,6 +101,7 @@ export const INTENT = {
 	EXCHANGES: 'exchanges',
 	HISTORICAL_NEWS: 'historical_news',
 	MATCHING_SYMBOLS: 'matching_symbols',
+	MARKET_RULE: 'market_rule',
 	SCANNER_PARAMTERS: 'scanner_parameters',
 	SCANNER_SUBSCRIPTION: 'scanner_subscription'
 }
@@ -124,7 +127,8 @@ export const SUBSCRIPTION_TYPE = {
 	[INTENT.MATCHING_SYMBOLS]: 'MatchingSymbols',
 	[INTENT.SCANNER_PARAMTERS]: 'ScannerParameters',
 	[INTENT.SCANNER_SUBSCRIPTION]: 'ScannerSubscription',
-	[INTENT.EXCHANGES]: 'MktDepthExchanges'
+	[INTENT.EXCHANGES]: 'MktDepthExchanges',
+	[INTENT.MARKET_RULE]: 'MarketRule'
 }
 
 export const CURRENCIES = [

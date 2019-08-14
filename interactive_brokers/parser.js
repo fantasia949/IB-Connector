@@ -191,6 +191,7 @@ const dataMapperFunc = {
 				minTick,
 				orderTypes,
 				validExchanges,
+				marketRuleIds,
 				longName,
 				industry,
 				category,
@@ -206,6 +207,7 @@ const dataMapperFunc = {
 		minTick,
 		orderTypes,
 		validExchanges,
+		marketRuleIds,
 		longName,
 		industry,
 		category,
@@ -308,7 +310,8 @@ const dataMapperFunc = {
 			listingExch,
 			serviceDataType,
 			aggGroup
-		}))
+		})),
+	[MARKETDATA_EVENT.MARKET_RULE]: ([ marketRuleId, priceIncrements ]) => ({ marketRuleId, priceIncrements })
 }
 
 export const parseMessage = message => {
