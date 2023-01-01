@@ -13,8 +13,8 @@
   },
   "devDependencies": {
     "jest": "^24.8.0",
-    "webpack": "^4.36.1",
-    "webpack-cli": "^3.3.6"
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
   },
   "scripts": {
     "pack": "webpack --config ./webpack.config.js --entry=./interactive_brokers/index.js  --output-filename=index.js",
